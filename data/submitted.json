@@ -383,5 +383,26 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-24",
+    "kind": "submitted",
+    "title": "Summer Research Internship in Computer Science 2027",
+    "org": "Carnegie Mellon University, Computer Science Department",
+    "city": "Pittsburgh",
+    "state": "PA",
+    "fields": [
+      "Computer science"
+    ],
+    "summary": "Ten-week summer program, usually starting the last week of June, where about 20 juniors and seniors do research with a CMU computer science faculty mentor and attend technical talks. No stipend is listed, and admitted students pay a 1,600 dollar administrative fee.",
+    "url": "https://csd.cmu.edu/academics/bachelors/summer-research-internship-in-computer-science",
+    "deadline": "2027-01-01",
+    "ends": null,
+    "paid": null,
+    "citizenship": "Undergraduate juniors and seniors with strong promise for graduate study; CMU helps with visas if needed",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
