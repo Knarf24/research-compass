@@ -82,7 +82,7 @@ function fillSelect(sel, values, keepFirst = true) {
   if (first) sel.append(first);
   for (const v of values) sel.append(el("option", { value: v }, v));
 }
-const KIND_LABEL = { university: "University-run program", reu: "NSF REU summer site", program: "National program", federal: "Federal student job", submitted: "Community submitted" };
+const KIND_LABEL = { university: "University-run program", reu: "NSF REU summer site", program: "National program", federal: "Federal student job", submitted: "External · sent in by a visitor" };
 
 // ------------------------------------------------------------------ setup
 function setup() {
