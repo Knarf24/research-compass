@@ -516,7 +516,11 @@ async function fillFromResume(file) {
         });
         const ai = await res.json().catch(() => ({}));
         if (res.ok) {
-          found = Object.fromEntries(Object.keys(RESUME_KEYS).map((k) => [k, (ai[k] || "").trim() || found[k] || ""]));
+          const local = found;
+          found = Object.fromEntries(Object.keys(RESUME_KEYS).map((k) => [k, (ai[k] || "").trim() || local[k] || ""]));
+          // The class year is worked out exactly from the graduation date on this device; prefer that.
+          if (local.year) found.year = local.year;
+          if (found.name && found.name === found.name.toUpperCase()) found.name = found.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
           usedAi = true;
         }
       } catch { /* keep the on-device result */ }
