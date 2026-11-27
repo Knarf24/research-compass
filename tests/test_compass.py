@@ -26,7 +26,7 @@ REU = [
      "fundProgramName": "RSCH EXPER FOR UNDERGRAD SITES"},
     {"id": "2400002", "title": "Collaborative Research: REU Site: Coastal Ocean Ecology", "awardeeName": "UNIVERSITY OF FLORIDA",
      "awardeeCity": "GAINESVILLE", "awardeeStateCode": "FL", "piFirstName": "Rachel", "piLastName": "Carson", "expDate": "06/30/2028",
-     "abstractText": "Students study marine ecosystems and coastal ecology.", "fundProgramName": "RSCH EXPER FOR UNDERGRAD SITES"},
+     "abstractText": "Students study marine ecosystems and coastal ecology. Questions: r.carson@ufl.edu.", "fundProgramName": "RSCH EXPER FOR UNDERGRAD SITES"},
     {"id": "2400003", "title": "Conference: Undergraduate Research Symposium", "awardeeName": "SOME COLLEGE", "awardeeStateCode": "TX",
      "expDate": "06/30/2028", "abstractText": "A conference.", "fundProgramName": "OTHER"},
 ]
@@ -102,6 +102,8 @@ class DataJob(unittest.TestCase):
         self.assertIn("AI and machine learning", first["fields"])
         self.assertIn("Robotics", first["fields"])
         self.assertEqual(reu[1]["url"], "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2400002")
+        self.assertNotIn("@", json.dumps(listings), "personal emails are never republished")
+        self.assertNotIn("Biology", first["fields"], "one passing word in an abstract doesn't tag a field")
 
     def test_usajobs_is_optional_and_expired_jobs_are_dropped(self):
         listings, _ = self.build(USAJOBS_API_KEY=None, USAJOBS_EMAIL=None)

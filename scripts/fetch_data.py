@@ -99,10 +99,11 @@ NOT_RESEARCH_GRANT = re.compile(
 )
 UNIVERSITY = re.compile(r"universit|college|institute of technology|polytechnic|school of mines|\bTech\b", re.I)
 BOILERPLATE = re.compile(r"This award reflects NSF'?s statutory mission.*$", re.I | re.S)
+EMAIL = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
 URL_IN_TEXT = re.compile(r"https?://[^\s<>\"')\]]+", re.I)
 
 REU_PAGES = 40           # 40 pages x 25 = up to 1,000 active REU site awards
-PROF_PAGES = 4           # per field: up to 100 recent grants
+PROF_PAGES = 8           # per field: up to 200 recent grants
 PAUSE = 0.4              # seconds between API calls, to be polite
 
 
@@ -136,6 +137,7 @@ def clean_text(text: str | None) -> str:
     text = re.sub(r"<br\s*/?>", " ", text, flags=re.I)
     text = re.sub(r"<[^>]+>", " ", text)
     text = BOILERPLATE.sub("", text)
+    text = EMAIL.sub("(contact via the official page)", text)  # never republish personal emails
     return re.sub(r"\s+", " ", text).strip()
 
 
@@ -149,13 +151,17 @@ def short(text: str, limit: int) -> str:
     return cut.rsplit(" ", 1)[0] + "…"
 
 
-def tag_fields(text: str) -> list[str]:
-    low = " " + text.lower() + " "
-    found = []
+def tag_fields(text: str, body: str = "") -> list[str]:
+    """Fields named in the title count at once; a long abstract needs two different hits,
+    so one passing mention ('cell phone', 'learning') doesn't tag a program."""
+    title, body = " " + text.lower() + " ", " " + body.lower() + " "
+    strong, weak = [], []
     for field, words in FIELDS.items():
-        if any(re.search(r"\b" + re.escape(w), low) for w in words):
-            found.append(field)
-    return found
+        if any(re.search(r"\b" + re.escape(w), title) for w in words):
+            strong.append(field)
+        elif sum(1 for w in words if re.search(r"\b" + re.escape(w), body)) >= 2:
+            weak.append(field)
+    return strong + weak
 
 
 def title_case(name: str) -> str:
@@ -242,7 +248,7 @@ def fetch_reu_sites() -> list[dict]:
             "org": title_case(a.get("awardeeName") or ""),
             "city": title_case(a.get("awardeeCity") or ""),
             "state": state if state in STATES else "",
-            "fields": tag_fields(title + " " + abstract),
+            "fields": tag_fields(title, abstract),
             "summary": short(abstract, 320),
             "url": site or NSF_AWARD_PAGE.format(id=a.get("id")),
             "award_url": NSF_AWARD_PAGE.format(id=a.get("id")),
@@ -294,7 +300,7 @@ def fetch_professors() -> list[dict]:
             })
             if field not in person["fields"]:
                 person["fields"].append(field)
-            for f in tag_fields(title + " " + abstract):
+            for f in tag_fields(title, abstract):
                 if f not in person["fields"]:
                     person["fields"].append(f)
             if any(g["id"] == a.get("id") for g in person["grants"]):
