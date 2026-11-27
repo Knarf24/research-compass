@@ -45,19 +45,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Add the listing
+      - name: Add the listing, save it, close the issue and rebuild the site
+        # Several approvals can run at once. Each attempt starts from the latest main and adds the
+        # listing again, so one approval can't overwrite another. If every attempt fails, the job
+        # fails and the issue stays open, instead of saying "Published" when it wasn't.
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/submissions.py publish
-      - name: Save, close the issue and rebuild the site
-        env:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ github.event.issue.number }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/submitted.json
-          git commit -m "Publish submitted listing #$NUMBER"
-          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
+          ok=""
+          for i in 1 2 3 4 5 6; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            python scripts/submissions.py publish
+            git add data/submitted.json
+            git diff --cached --quiet || git commit -q -m "Publish submitted listing #$NUMBER"
+            if git push origin HEAD:main; then ok=1; break; fi
+            sleep $((5 + RANDOM % 15))
+          done
+          [ -n "$ok" ] || { echo "Couldn't save the listing after several tries."; exit 1; }
           gh issue close "$NUMBER" --comment "Published. It will show on Research Compass in a few minutes. Thank you!"
           gh workflow run update-and-deploy.yml --ref main
