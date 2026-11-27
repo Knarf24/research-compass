@@ -28,7 +28,7 @@ def _site_url() -> str:
 
 SITE_URL = _site_url().rstrip("/") + "/"
 KIND = {"university": "University-run program", "reu": "NSF REU summer site", "program": "National program",
-        "federal": "Federal student job", "submitted": "Community submitted"}
+        "federal": "Federal student job", "submitted": "External · sent in by a visitor"}
 
 
 def slug(listing_id: str) -> str:
