@@ -260,28 +260,6 @@
     "hbcu_focus": false
   },
   {
-    "id": "sub-17",
-    "kind": "submitted",
-    "title": "Biomedical Informatics and Data Science (BIDS@I2DB) Summer Internship",
-    "org": "Washington University in St. Louis, Institute for Informatics, Data Science & Biostatistics",
-    "city": "St. Louis",
-    "state": "MO",
-    "fields": [
-      "Computer science",
-      "Biomedical and health"
-    ],
-    "summary": "Funded 11-week, full-time internship (June 1 to August 13, 2027) in faculty labs working on biomedical informatics, AI and data science. Pays about $18/hour with free university housing if needed and travel help.",
-    "url": "https://i2db.wustl.edu/educationprograms/biomedical-informatics-and-data-science-internship/",
-    "deadline": "2027-01-15",
-    "ends": null,
-    "paid": true,
-    "citizenship": "Non-graduating undergraduates at a US institution, any major; international students eligible for CPT/OPT",
-    "years": [],
-    "checked": "2026-11-27",
-    "international": "yes",
-    "hbcu_focus": false
-  },
-  {
     "id": "sub-18",
     "kind": "submitted",
     "title": "Data Science Institute Undergraduate Student Intern, Summer 2027",
@@ -382,6 +360,28 @@
     "years": [],
     "checked": "2026-11-27",
     "international": "check",
+    "hbcu_focus": false
+  },
+  {
+    "id": "sub-17",
+    "kind": "submitted",
+    "title": "Biomedical Informatics and Data Science (BIDS) Summer Internship at I2DB",
+    "org": "Washington University in St. Louis, Institute for Informatics, Data Science & Biostatistics",
+    "city": "St. Louis",
+    "state": "MO",
+    "fields": [
+      "Computer science",
+      "Biomedical and health"
+    ],
+    "summary": "Funded 11-week, full-time internship (June 1 to August 13, 2027) in faculty labs working on biomedical informatics, AI and data science. Pays about $18/hour with free university housing if needed and travel help.",
+    "url": "https://i2db.wustl.edu/educationprograms/biomedical-informatics-and-data-science-internship/",
+    "deadline": "2027-01-15",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Non-graduating undergraduates at a US institution, any major; international students eligible for CPT/OPT",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
     "hbcu_focus": false
   }
 ]
