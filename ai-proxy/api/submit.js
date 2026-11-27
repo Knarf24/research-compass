@@ -210,13 +210,20 @@ async function openIssue(title, body) {
 }
 
 async function notify(title, link) {
-  if (!process.env.NTFY_TOPIC) return;
+  // Returns what happened, so the site's check can tell whether the phone alert went out.
+  const topic = (process.env.NTFY_TOPIC || "").trim();
+  if (!topic) return "off";
   try {
-    await fetch(`https://ntfy.sh/${encodeURIComponent(process.env.NTFY_TOPIC)}`, {
+    const r = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
       method: "POST", body: `New Research Compass submission waiting for approval: ${title}`,
-      headers: { Title: "Research Compass submission", Click: link, Tags: "compass" }, signal: AbortSignal.timeout(5000),
+      headers: { Title: "Research Compass submission", Click: link, Tags: "compass", "User-Agent": UA }, signal: AbortSignal.timeout(8000),
     });
-  } catch { /* a missed phone alert is fine; the issue is still there */ }
+    if (!r.ok) console.error(`ntfy answered ${r.status}`);
+    return r.ok ? "sent" : `failed ${r.status}`;
+  } catch (e) {
+    console.error("ntfy failed:", e && e.name);
+    return "failed";
+  }
 }
 
 export default async function handler(req, res) {
@@ -258,8 +265,8 @@ export default async function handler(req, res) {
   const title = tidy(info.title, 120) || "Research opportunity";
   try {
     const link = await openIssue(`[Listing] ${title}`, issueBody(info, page.url, input.note));
-    await notify(title, link);
-    return res.status(200).json({ ok: true, title, org: tidy(info.org, 120) });
+    const notified = await notify(title, link);
+    return res.status(200).json({ ok: true, title, org: tidy(info.org, 120), notified });
   } catch (e) {
     console.error("issue failed:", e && e.message);
     return res.status(502).json({ error: "We read the page but couldn't save your submission. Please try again later." });
