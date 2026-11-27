@@ -169,7 +169,8 @@ function shareSlug(id) {
   return String(id).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "program";
 }
 function shareUrl(r) {
-  return new URL(`p/${shareSlug(r.id)}/`, location.href.split("#")[0]).href;
+  const base = (window.COMPASS_CONFIG && window.COMPASS_CONFIG.shareBase) || location.href.split("#")[0];
+  return new URL(`p/${shareSlug(r.id)}/`, base.endsWith("/") ? base : base + "/").href;
 }
 function toggleShare(btn, r) {
   const open = btn.parentElement.nextElementSibling;

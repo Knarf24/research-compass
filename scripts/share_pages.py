@@ -11,13 +11,15 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import re
 import sys
 from html import escape
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SITE_URL = "https://knarf24.github.io/research-compass/"
+# The public address used in shared links and previews (a neutral name, not a GitHub username).
+SITE_URL = os.environ.get("COMPASS_SITE_URL", "https://knarf24.github.io/research-compass/").rstrip("/") + "/"
 KIND = {"university": "University-run program", "reu": "NSF REU summer site", "program": "National program",
         "federal": "Federal student job", "submitted": "Community submitted"}
 
@@ -111,11 +113,11 @@ def page(r: dict, updated: str) -> str:
 
 NOT_FOUND = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Not found · Research Compass</title><link rel="stylesheet" href="/research-compass/style.css"></head>
+<title>Not found · Research Compass</title><link rel="stylesheet" href="SITE_URLstyle.css"></head>
 <body><main class="app shared"><article class="card" style="margin-top:40px">
 <h2>This opportunity isn't listed anymore</h2>
 <p class="small">Its deadline may have passed, or the page moved. There are hundreds more on Research Compass.</p>
-<div class="row"><a class="primary btn" href="/research-compass/">Explore Research Compass</a></div>
+<div class="row"><a class="primary btn" href="SITE_URL">Explore Research Compass</a></div>
 </article></main></body></html>
 """
 
@@ -132,7 +134,7 @@ def main(out: str) -> int:
             d.mkdir(parents=True, exist_ok=True)
             (d / "index.html").write_text(page(r, data.get("updated") or ""), encoding="utf-8")
             n += 1
-    (site / "404.html").write_text(NOT_FOUND, encoding="utf-8")
+    (site / "404.html").write_text(NOT_FOUND.replace("SITE_URL", SITE_URL), encoding="utf-8")
     print(f"Wrote {n} share pages.")
     return 0
 
