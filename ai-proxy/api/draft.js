@@ -176,7 +176,7 @@ export default async function handler(req, res) {
 
   // Thinking makes Gemini much slower; keep it low. Older models reject thinkingLevel,
   // so on a 400 that mentions thinking we retry once without it.
-  const callGemini = (thinking, model = MODEL) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+  const callGemini = (thinking, model = MODEL, ms = 20000) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -190,23 +190,30 @@ export default async function handler(req, res) {
         ...(thinking ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
       },
     }),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(ms),
   });
 
   let r;
   try {
-    const attempt = async (model) => {
-      let resp = await callGemini(true, model);
+    const attempt = async (model, ms) => {
+      let resp = await callGemini(true, model, ms);
       if (resp.status === 400) {
         const text = await resp.text();
-        resp = /thinking/i.test(text) ? await callGemini(false, model) : new Response(text, { status: 400 });
+        resp = /thinking/i.test(text) ? await callGemini(false, model, ms) : new Response(text, { status: 400 });
       }
       return resp;
     };
-    r = await attempt(MODEL);
-    if ([429, 500, 503].includes(r.status) && BACKUP_MODEL && BACKUP_MODEL !== MODEL) {
+    // The main model gets 20 seconds; if it is slow, overloaded or out of quota,
+    // the lighter backup model gets 30 more (the function may run 60 seconds).
+    try {
+      r = await attempt(MODEL, 20000);
+    } catch (error) {
+      if (!(error && (error.name === "TimeoutError" || error.name === "AbortError"))) throw error;
+      r = new Response("", { status: 504 });
+    }
+    if ([429, 500, 503, 504].includes(r.status) && BACKUP_MODEL && BACKUP_MODEL !== MODEL) {
       console.error(`Gemini ${MODEL} returned ${r.status}; trying ${BACKUP_MODEL}`);
-      r = await attempt(BACKUP_MODEL);
+      r = await attempt(BACKUP_MODEL, 30000);
     }
   } catch (error) {
     const timedOut = error && (error.name === "TimeoutError" || error.name === "AbortError");
