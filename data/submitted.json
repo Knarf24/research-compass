@@ -320,5 +320,26 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-20",
+    "kind": "submitted",
+    "title": "Robotics Institute Summer Scholars (RISS) 2027",
+    "org": "Carnegie Mellon University, Robotics Institute",
+    "city": "Pittsburgh",
+    "state": "PA",
+    "fields": [
+      "Robotics"
+    ],
+    "summary": "Full-time, in-person summer research program in robotics and AI at CMU (June 1 to August 6, 2027). Scholars receive a scholarship detailed in the offer letter; campus housing is not provided.",
+    "url": "https://admissions.scs.cmu.edu/register/riss_2027",
+    "deadline": "2027-01-20",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Undergrads with 2+ semesters done and 1+ semester left; international students in the US must be CPT eligible",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
