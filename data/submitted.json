@@ -57,5 +57,26 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-7",
+    "kind": "submitted",
+    "title": "Biomedical Informatics (BMI) Summer Internship 2027",
+    "org": "University of Arizona College of Medicine – Phoenix, Department of Biomedical Informatics",
+    "city": "Remote",
+    "state": "",
+    "fields": [
+      "Biomedical and health"
+    ],
+    "summary": "Remote summer internship (May 24 to August 13, 2027) where up to six interns work with faculty on AI, data science and informatics projects. The application window runs January 11 to February 5, 2027; pay is provided.",
+    "url": "https://phoenixmed.arizona.edu/bmi/summer-internship",
+    "deadline": "2027-02-05",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Second- or third-year undergrads or grad students in data science, CS, biomedical engineering, computational biology or related",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
