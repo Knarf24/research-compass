@@ -301,5 +301,24 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-19",
+    "kind": "submitted",
+    "title": "MSK Summer Programs for Undergraduates 2027",
+    "org": "Memorial Sloan Kettering Cancer Center",
+    "city": "New York",
+    "state": "NY",
+    "fields": [],
+    "summary": "Application portal for MSK's 2027 undergraduate summer programs, including Computational Biology, Chemical Biology, Engineering and Imaging, Immunology, Mechanistic Biology, MSK Engage and QSURE (quantitative sciences). Each program has its own page with details.",
+    "url": "https://admissions.mskcc.org/portal/apply-at-mskcc",
+    "deadline": "2027-02-01",
+    "ends": null,
+    "paid": null,
+    "citizenship": "Undergraduates at US colleges; non-US citizens may apply but need US work eligibility",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
