@@ -1,1 +1,23 @@
-[]
+[
+  {
+    "id": "sub-4",
+    "kind": "submitted",
+    "title": "ORNL Pathways to Computing Internship Program (PCIP) - Summer 2027",
+    "org": "Oak Ridge National Laboratory (ORNL)",
+    "city": "Oak Ridge",
+    "state": "TN",
+    "fields": [
+      "Computer science"
+    ],
+    "summary": "The Pathways to Computing Internship Program at Oak Ridge National Laboratory is a 10-week summer program offering undergraduate students hands-on experience in computer science, computational science, and mathematics. Participants work alongside research staff and gain access to ORNL's world-class computing facilities. The program provides a weekly stipend, housing assistance, and travel reimbursement for non-local students.",
+    "url": "https://www.zintellect.com/Opportunity/Details/ORNL-PCIP-2027",
+    "deadline": "2027-01-29",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Currently enrolled full-time undergraduate students returning for Fall 2027.",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
+  }
+]
