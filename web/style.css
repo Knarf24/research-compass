@@ -103,7 +103,7 @@ textarea { width: 100%; resize: vertical; line-height: 1.5; }
 .ghost { background: transparent; color: var(--ink); }
 .ghost:hover { border-color: var(--teal); }
 .ghost.danger { color: var(--bad); }
-.wide { width: 100%; justify-content: center; margin-top: 12px; }
+.wide { display: flex; width: auto; margin: 14px auto 0; padding: 7px 18px; font-size: 14px; }
 
 .empty { padding: 28px 16px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); }
 .intro { margin-bottom: 12px; }
@@ -174,3 +174,10 @@ details summary { cursor: pointer; font-weight: 600; }
 details.howscore { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 10px; }
 details.howscore ul { margin: 6px 0 0; padding-left: 18px; }
 details.howscore li { margin: 3px 0; }
+.subform { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.subform #subUrl { flex: 2 1 280px; }
+.subform #subNote { flex: 1 1 200px; }
+.hp { position: absolute !important; left: -10000px !important; width: 1px; height: 1px; opacity: 0; }
+#subStatus:empty { display: none; }
+#subStatus.ok { color: var(--good); }
+#subStatus.err { color: var(--warn); }

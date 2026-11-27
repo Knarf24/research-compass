@@ -119,6 +119,7 @@ function setup() {
   for (const id of ["eWhy", "eWhen"]) $(id).addEventListener("input", debounce(renderEmail, 150));
   $("eKind").addEventListener("input", () => { aiDraft = false; $("tweakRow").hidden = true; renderEmail(); });
   setupAi();
+  setupSubmit();
   $("eCopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(`Subject: ${$("eSubject").value}\n\n${$("eBody").value}`); toast("Copied. Paste it into your email."); }
     catch { $("eBody").select(); toast("Select all and copy."); }
@@ -283,6 +284,45 @@ function profCard(p) {
 // ------------------------------------------------------------------ AI writer (optional)
 const AI_URL = (window.COMPASS_CONFIG && window.COMPASS_CONFIG.aiEndpoint) || "";
 let aiDraft = false;   // true once the AI wrote the current draft, so typing doesn't replace it
+
+// ------------------------------------------------------------------ paste-a-link submissions
+const SUBMIT_URL = (window.COMPASS_CONFIG && window.COMPASS_CONFIG.submitEndpoint) || (AI_URL ? AI_URL.replace(/\/api\/draft$/, "/api/submit") : "");
+
+function setupSubmit() {
+  const form = $("subForm");
+  $("footSubmit").addEventListener("click", (e) => {
+    e.preventDefault();
+    showTab("programs");
+    $("submitCard").scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!form.hidden) setTimeout(() => $("subUrl").focus({ preventScroll: true }), 400);
+  });
+  if (!SUBMIT_URL) { form.hidden = true; $("subGithub").textContent = "Submit it with our form (GitHub account)."; return; }
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = $("subStatus");
+    const btn = $("subBtn");
+    btn.disabled = true;
+    status.className = "small";
+    status.textContent = "Reading the page… this takes about 10 to 30 seconds.";
+    try {
+      const res = await fetch(SUBMIT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: $("subUrl").value, note: $("subNote").value, website: $("subWebsite").value }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "Something went wrong. Please try again later.");
+      status.className = "small ok";
+      status.textContent = `Thanks! We got ${out.title ? `“${out.title}”` : "your link"}. It will appear here once it's been checked and approved.`;
+      form.reset();
+    } catch (err) {
+      status.className = "small err";
+      status.textContent = err.message === "Failed to fetch" ? "We couldn't reach the server. Check your connection and try again." : err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
 
 function setupAi() {
   if (!AI_URL) return;

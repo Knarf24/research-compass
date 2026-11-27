@@ -26,3 +26,22 @@ Vercel environment variable. There is nothing to pay: no billing is turned on.
 - Inputs are trimmed to fixed sizes.
 - `PER_IP_PER_HOUR` (default 15) and `DAILY_LIMIT` (default 200) are best-effort limits per server instance.
 - Nothing is stored. Each request is one Gemini call (model `gemini-flash-latest`, or `gemini-flash-lite-latest` when that is busy; change with `GEMINI_MODEL` and `GEMINI_BACKUP_MODEL`), JSON output.
+
+## Paste-a-link submissions (`api/submit.js`)
+
+Visitors paste the link to an opportunity on the site. The function checks the link, reads the page, asks Gemini
+for the details, and opens a `[Listing]` issue in the repository. The repository's automatic checks then run, and
+nothing is published until the owner adds the `approved` label. Visitors need no GitHub account.
+
+One-time setup:
+
+1. Create a fine-grained token at https://github.com/settings/personal-access-tokens/new: name it
+   "Research Compass submissions", pick an expiration, choose **Only select repositories → research-compass**, and
+   under **Repository permissions** set **Issues** to **Read and write** (nothing else).
+2. In Vercel, add the environment variable `GITHUB_ISSUES_TOKEN` with that token, then redeploy.
+3. Optional: add `NTFY_TOPIC` (an ntfy.sh topic) to get a phone notification for each new submission. GitHub doesn't
+   email you about issues opened with your own token.
+
+Abuse protection: only the site may call it, a hidden honeypot field, 3 submissions per visitor per hour and 30 a
+day (`SUBMIT_PER_IP_PER_HOUR`, `SUBMIT_DAILY_LIMIT`), public https pages only (no private or local addresses, no social
+media), size and time limits on reading the page, and the AI must agree the page is a real opportunity.

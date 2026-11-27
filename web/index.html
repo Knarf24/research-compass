@@ -78,12 +78,19 @@
       <div class="list" id="pList"></div>
       <button class="ghost wide" id="pMore" hidden>Show more</button>
 
-      <div class="card block submit">
+      <div class="card block submit" id="submitCard">
         <div>
           <h3>Know a research opportunity that isn't here?</h3>
-          <p class="small">Send it in with the official link. Automatic checks confirm the page opens, names the program and isn't already listed, then a person checks the official page before it's published. Needs a free GitHub account.</p>
+          <p class="small">Paste the link to its official page. We read the page, check it, and a person approves it before it appears here. No account needed.</p>
+          <form id="subForm" class="subform" autocomplete="off">
+            <input type="url" id="subUrl" name="url" required placeholder="https://… (the program's official page)" aria-label="Link to the opportunity">
+            <input type="text" id="subNote" name="note" maxlength="300" placeholder="Anything we should know? (optional)" aria-label="Note">
+            <input type="text" name="website" id="subWebsite" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+            <button class="primary" type="submit" id="subBtn">➕ Submit</button>
+          </form>
+          <p class="small" id="subStatus" role="status"></p>
+          <p class="small"><a href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener" id="subGithub">Prefer to fill in the details yourself? Use the full form (GitHub account).</a></p>
         </div>
-        <a class="primary btn" href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener">➕ Submit an opportunity</a>
       </div>
 
       <details class="block dirs">
@@ -245,7 +252,7 @@
   <footer class="foot small">
     <p>Data: <a href="https://www.nsf.gov/funding/initiatives/reu" target="_blank" rel="noopener">NSF</a> award data, <a href="https://www.usajobs.gov/" target="_blank" rel="noopener">USAJOBS</a>, university and national programs we check by hand, and the <a href="https://sites.ed.gov/whhbcu/one-hundred-and-five-historically-black-colleges-and-universities/" target="_blank" rel="noopener">Department of Education HBCU list</a>. <span id="updated"></span> Always confirm details on the official page before applying.</p>
     <p>Research Compass is an independent student project. It is not affiliated with or endorsed by NSF, any agency, university or company listed. Names are used only to point you to official pages.
-      Know a program we're missing? <a href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener">Submit a listing</a>.</p>
+      Know a program we're missing? <a href="#" id="footSubmit">Submit a link</a>.</p>
     <p>Built by Frank Ncube · <a href="https://github.com/Knarf24/research-compass" target="_blank" rel="noopener">Source</a> · <a href="https://knarf24.github.io/project-hub/" target="_blank" rel="noopener">More projects</a></p>
   </footer>
 
