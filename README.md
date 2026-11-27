@@ -1,6 +1,6 @@
 # 🧭 Research Compass
 
-**Live site:** https://knarf24.github.io/research-compass/
+**Live site:** https://research-compass.studentlabs.me/ (also at https://knarf24.github.io/research-compass/)
 
 **The problem:** paid undergraduate research in the US is spread over hundreds of campus pages, agency sites and
 directories. Students don't know where to look, which programs they actually qualify for, or how to approach a

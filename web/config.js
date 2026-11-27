@@ -4,5 +4,5 @@
 //               scripts/share_pages.py reads it too.
 window.COMPASS_CONFIG = {
   aiEndpoint: "https://research-compass-ai-proxy.vercel.app/api/draft",
-  shareBase: "",  // switch to "https://research-compass.studentlabs.me/" once that domain is live
+  shareBase: "https://research-compass.studentlabs.me/",
 };
