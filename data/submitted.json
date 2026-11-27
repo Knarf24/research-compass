@@ -38,5 +38,24 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-5",
+    "kind": "submitted",
+    "title": "CALIBIR Summer Research Internship",
+    "org": "Wake Forest University School of Medicine",
+    "city": "Winston-Salem",
+    "state": "NC",
+    "fields": [],
+    "summary": "The CALIBIR Summer Research Internship is an NIH-funded 10-week program offering undergraduate and master's students hands-on research experience in translational artificial intelligence and biomedical informatics. Interns participate in professional development, seminars, and collaborative research projects while receiving hourly pay and on-campus housing.",
+    "url": "https://school.wakehealth.edu/research/institutes-and-centers/center-for-artificial-intelligence-research/calibir-summer-research-internship",
+    "deadline": "2027-01-29",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Enrolled US undergrad/master's students, 18+, min 3.0 GPA, completed at least two semesters, not graduating before May 2027.",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
