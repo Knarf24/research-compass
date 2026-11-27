@@ -178,5 +178,26 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-13",
+    "kind": "submitted",
+    "title": "Research Internship, Open Ecosystem (2027)",
+    "org": "Allen Institute for AI (Ai2)",
+    "city": "Seattle",
+    "state": "WA",
+    "fields": [
+      "Ecology and environment"
+    ],
+    "summary": "Paid 12-week, on-site research internship on Ai2's open foundation models such as Olmo and Molmo; interns usually publish papers. Undergraduate pay is listed at $94,320 a year (pro-rated).",
+    "url": "https://job-boards.greenhouse.io/thealleninstitute/jobs/8319350",
+    "deadline": "2027-01-08",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Mostly PhD candidates; master's and undergraduate students with a strong research background considered",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
