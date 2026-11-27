@@ -418,7 +418,7 @@ class ShareTests(unittest.TestCase):
              "international": "yes", "fields": ["Computer science"], "source": "University programs", "checked": "2026-11-27"}
         html = share_pages.page(r, "2026-11-27")
         self.assertIn('<meta property="og:title" content="SURF &lt;Engineering&gt;">', html)
-        self.assertIn("https://knarf24.github.io/research-compass/p/stanford-surf/", html)
+        self.assertIn(share_pages.SITE_URL + "p/stanford-surf/", html)
         self.assertIn('href="https://engineering.stanford.edu/SURF"', html)
         self.assertIn("../../#p=stanford-surf", html)
         self.assertIn("Deadline Feb 1, 2027", html)

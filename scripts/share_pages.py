@@ -19,7 +19,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # The public address used in shared links and previews (a neutral name, not a GitHub username).
-SITE_URL = os.environ.get("COMPASS_SITE_URL", "https://knarf24.github.io/research-compass/").rstrip("/") + "/"
+def _site_url() -> str:
+    if os.environ.get("COMPASS_SITE_URL"):
+        return os.environ["COMPASS_SITE_URL"]
+    m = re.search(r'shareBase:\s*"([^"]+)"', (ROOT / "web" / "config.js").read_text(encoding="utf-8"))
+    return m.group(1) if m else "https://knarf24.github.io/research-compass/"
+
+
+SITE_URL = _site_url().rstrip("/") + "/"
 KIND = {"university": "University-run program", "reu": "NSF REU summer site", "program": "National program",
         "federal": "Federal student job", "submitted": "Community submitted"}
 
