@@ -404,5 +404,24 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-25",
+    "kind": "submitted",
+    "title": "IU-MSI STEM Summer Scholars Institute 2027",
+    "org": "Indiana University, IU-MSI STEM Initiative",
+    "city": "Bloomington",
+    "state": "IN",
+    "fields": [],
+    "summary": "Eight-week summer research program (June 6 to July 30, 2027) on IU's Bloomington and Indianapolis campuses for students from Minority Serving Institutions, including HBCUs, who are interested in a PhD. Applicants pick one or two faculty labs from the 2027 mentor list, including computer science and computer engineering projects.",
+    "url": "https://stem.indiana.edu/infoforstudents/howtoapply/index.html",
+    "deadline": "2027-01-15",
+    "ends": null,
+    "paid": null,
+    "citizenship": "Students enrolled at a Minority Serving Institution (HBCU, HSI, TCU etc.), GPA 3.0+, rising juniors and seniors preferred",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": true
   }
 ]
