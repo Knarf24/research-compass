@@ -358,7 +358,9 @@ function setupSubmit() {
       const out = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(out.error || "Something went wrong. Please try again later.");
       status.className = "small ok";
-      status.textContent = `Thanks! We got ${out.title ? `“${out.title}”` : "your link"}. It will appear here once it's been checked and approved.`;
+      status.textContent = out.unread
+        ? "Thanks! That site doesn't let us read it automatically, so a person will open the link and add the details. It will appear here once it's approved."
+        : `Thanks! We got ${out.title ? `“${out.title}”` : "your link"}. It will appear here once it's been checked and approved.`;
       form.reset();
     } catch (err) {
       status.className = "small err";

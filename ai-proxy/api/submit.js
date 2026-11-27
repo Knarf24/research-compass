@@ -250,8 +250,22 @@ export default async function handler(req, res) {
 
   let page;
   try { page = await readPage(checked.url); } catch { return res.status(400).json({ error: "We couldn't open that page. Check the link and try again." }); }
-  if (page.status !== 200) return res.status(400).json({ error: `We couldn't open that page (it answered with error ${page.status}). Check the link.` });
-  if (page.text.length < 150) return res.status(400).json({ error: "We couldn't read any details on that page. Try the program's main information page." });
+  if (page.status === 404 || page.status === 410) return res.status(400).json({ error: "That page doesn't exist (error 404). Check the link." });
+  // Some sites block automated readers (403) or only show their content with JavaScript. The link is
+  // still worth a look, so it goes to the review queue with the details left for the owner to fill in.
+  if (page.status !== 200 || page.text.length < 150) {
+    const host = checked.url.hostname;
+    const blank = { title: `Link from ${host}`, org: "", location: "", deadline: "", paid: "Not sure", international: "Not sure", hbcu: "No",
+      eligibility: "", summary: `The page couldn't be read automatically (${page.status !== 200 ? `the site answered ${page.status}` : "no readable text"}). Open it and fill in the details before approving.` };
+    try {
+      const link = await openIssue(`[Listing] Link from ${host} (needs details)`, issueBody(blank, page.url, input.note));
+      const notified = await notify(`a link from ${host} (needs details)`, link);
+      return res.status(200).json({ ok: true, title: "", notified, unread: true });
+    } catch (e) {
+      console.error("issue failed:", e && e.message);
+      return res.status(502).json({ error: "We couldn't save your submission. Please try again later." });
+    }
+  }
 
   let info;
   try { info = await extract(page); } catch (e) {
