@@ -362,5 +362,26 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-22",
+    "kind": "submitted",
+    "title": "Open Quantum Initiative (OQI) Undergraduate Fellowship 2027",
+    "org": "Chicago Quantum Exchange",
+    "city": "Chicago",
+    "state": "IL",
+    "fields": [
+      "Physics and astronomy"
+    ],
+    "summary": "Ten-week, in-person quantum science research fellowship with a mentor at a partner site (UChicago, Northwestern, Argonne, Fermilab, UIUC, Purdue, UW-Madison or Ohio State). $7,000 stipend plus housing and travel.",
+    "url": "https://chicagoquantum.org/oqi-undergraduate-fellowship",
+    "deadline": "2027-01-26",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Undergrads at US institutions who finished freshman year with 4+ physics, math, chem, engineering or CS courses",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
