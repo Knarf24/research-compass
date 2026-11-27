@@ -59,7 +59,8 @@ def fake_get_json(url, headers=None, tries=3):
     if "usajobs" in url:
         return JOBS
     q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
-    if q.get("offset", ["1"])[0] != "1":
+    assert '"' not in url, "quotes must be percent-encoded (the live API returns 400 otherwise)"
+    if q.get("offset", ["0"])[0] != "0":
         return {"response": {"award": []}}
     if q["keyword"][0] == '"REU Site"':
         return {"response": {"award": REU}}

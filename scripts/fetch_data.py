@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -181,18 +182,27 @@ def get_json(url: str, headers: dict[str, str] | None = None, tries: int = 3) ->
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json", **(headers or {})})
             with urllib.request.urlopen(req, timeout=60) as res:
                 return json.loads(res.read().decode("utf-8"))
-        except Exception as err:  # network, HTTP or JSON error
+        except urllib.error.HTTPError as err:
+            body = err.read()[:300].decode("utf-8", "replace") if err.fp else ""
+            last = f"HTTP {err.code} {body}".strip()
+            if 400 <= err.code < 500 and err.code != 429:
+                break  # a bad request will not fix itself on retry
+        except Exception as err:  # network or JSON error
             last = err
             time.sleep(2 * (attempt + 1))
     raise RuntimeError(f"{url.split('?')[0]} failed: {last}")
 
 
 def nsf_search(params: dict[str, str], pages: int) -> list[dict]:
-    """Page through the NSF Award Search API (25 per page, offset starts at 1)."""
+    """Page through the NSF Award Search API (25 per page).
+
+    The live API treats offset as a 0-based record index (offset=1 skips the first award),
+    and it rejects unencoded double quotes in the URL, so everything is percent-encoded.
+    """
     awards: list[dict] = []
     for page in range(pages):
-        query = dict(params, rpp="25", offset=str(1 + page * 25))
-        url = NSF_API + "?" + urllib.parse.urlencode(query, safe='",')
+        query = dict(params, rpp="25", offset=str(page * 25))
+        url = NSF_API + "?" + urllib.parse.urlencode(query, safe=",/")
         data = get_json(url).get("response", {})
         if "serviceNotification" in data:
             note = data["serviceNotification"][0]
@@ -213,7 +223,7 @@ def fetch_reu_sites() -> list[dict]:
     """Active NSF 'REU Site' awards: each one is a paid summer program run by a US campus."""
     now = today()
     awards = nsf_search(
-        {"keyword": '"REU Site"', "expDateStart": now.strftime("%m/%d/%Y"), "printFields": NSF_FIELDS},
+        {"keyword": '"REU Site"', "expDateStart": now.strftime("%m/%d/%Y")},
         REU_PAGES,
     )
     out = []
@@ -259,7 +269,6 @@ def fetch_professors() -> list[dict]:
                 "keyword": keyword,
                 "expDateStart": now.strftime("%m/%d/%Y"),
                 "startDateStart": since.strftime("%m/%d/%Y"),
-                "printFields": NSF_FIELDS,
             },
             PROF_PAGES,
         )
