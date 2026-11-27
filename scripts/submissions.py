@@ -188,7 +188,8 @@ def report(form: dict, checks: list[tuple[str, str]]) -> str:
 def to_listing(form: dict, number: int, today: dt.date) -> dict:
     loc = form.get("location", "")
     state = STATE.search(loc)
-    clean = lambda s, n: re.sub(r"\s+", " ", PHONE.sub("", EMAIL.sub("", s or ""))).strip()[:n]  # noqa: E731
+    # A bare "@" (e.g. "BIDS@I2DB") would fail the site's no-emails check and stop every deploy.
+    clean = lambda s, n: re.sub(r"\s+", " ", PHONE.sub("", EMAIL.sub("", s or "")).replace("@", " at ")).strip()[:n]  # noqa: E731
     deadline = _date(form.get("deadline", ""))
     paid = {"yes": True, "no": False}.get(form.get("paid", "").lower())
     intl = {"yes": "yes", "no": "no"}.get(form.get("international", "").lower(), "check")
