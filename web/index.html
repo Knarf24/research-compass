@@ -19,7 +19,7 @@
         <p class="tag">Paid undergrad research across the US, matched to you.</p>
       </div>
     </div>
-    <button class="chip" id="meBtn" type="button" title="Your profile">👤 <span id="meLabel">Set up your profile</span></button>
+    <button class="chip" id="meBtn" type="button" title="Edit your profile">👤 <span id="meLabel">Set up your profile</span></button>
   </header>
 
   <div id="loading" class="loading" role="status">
@@ -195,7 +195,10 @@
       </div>
       <label class="check"><input type="checkbox" name="hbcu"> I attend an HBCU (show HBCU programs first)</label>
       <label class="check"><input type="checkbox" name="paid_only"> I'm only looking for paid opportunities</label>
+      <p class="small privacy">🔒 <b>Your privacy:</b> your profile and tracker are saved only in this browser, not on our servers, and there's no account. Your résumé file is read on your device and never uploaded. If you use AI, your email, phone number and links are removed before anything is sent.</p>
       <div class="row end">
+        <button class="ghost danger" type="button" id="pfClear" formnovalidate>🗑️ Clear my data</button>
+        <span class="spacer"></span>
         <button class="ghost" value="cancel" formnovalidate>Close</button>
         <button class="primary" value="save" id="pfSave">Save profile</button>
       </div>

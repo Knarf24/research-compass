@@ -166,3 +166,8 @@ details summary { cursor: pointer; font-weight: 600; }
 .modal .resume label.btn { display: inline-flex; margin-top: 0; color: var(--ink); cursor: pointer; }
 .modal .resume label.check { display: flex; gap: 8px; }
 .modal .resume label.check > input { display: inline-block; width: auto; margin: 3px 0 0; }
+.privacy { margin: 14px 0 0; }
+.spacer { flex: 1; }
+#pfResumeStatus .ghost { margin-top: 8px; }
+.modal label.check { gap: 8px; align-items: flex-start; }
+.modal label.check > input { display: inline-block; width: auto; margin: 3px 0 0; flex: none; }

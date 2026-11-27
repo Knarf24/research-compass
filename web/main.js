@@ -156,7 +156,7 @@ function showTab(name) {
 }
 
 function showMe() {
-  $("meLabel").textContent = profile.major ? `${profile.name || "You"} · ${profile.major}` : "Set up your profile";
+  $("meLabel").textContent = profile.major ? `${profile.name || "You"} · ${profile.major} · ✏️ Edit` : "Set up your profile";
 }
 
 // ------------------------------------------------------------------ programs
@@ -445,6 +445,7 @@ function setupProfileForm() {
   fillSelect(f.major, ["", ...INFO.fields], false);
   f.major.options[0].textContent = "Choose…";
   setupResume();
+  setupClearData();
   $("profile").addEventListener("close", () => {
     if ($("profile").returnValue !== "save") return;
     const data = Object.fromEntries(new FormData(f).entries());
@@ -481,6 +482,23 @@ function openProfile() {
 // writer is set up and the student allows it, Gemini reads the text too (after emails, phone
 // numbers and links are removed). Only empty fields are filled, and the student reviews them.
 const RESUME_KEYS = { name: "name", school: "college", year: "year", major: "major", skills: "skills", interests: "interests", project: "project" };
+
+function setupClearData() {
+  const btn = $("pfClear");
+  let armed = false;
+  btn.addEventListener("click", () => {
+    if (!armed) {
+      armed = true;
+      btn.textContent = "Tap again to erase your profile and tracker";
+      setTimeout(() => { armed = false; btn.textContent = "🗑️ Clear my data"; }, 5000);
+      return;
+    }
+    try { for (const k of Object.keys(localStorage)) if (k.startsWith("rc.")) localStorage.removeItem(k); } catch { /* nothing stored */ }
+    profile = {};
+    saved = [];
+    location.reload();
+  });
+}
 
 function setupResume() {
   if (AI_URL) $("pfResumeAiWrap").hidden = false;
@@ -527,18 +545,35 @@ async function fillFromResume(file) {
     }
     const f = $("profileForm");
     const filled = [];
+    const differs = [];   // fields you already filled that the résumé says differently
     for (const [key, label] of Object.entries(RESUME_KEYS)) {
       const input = f[key];
       const value = (found[key] || "").trim();
-      if (!value || (input.value || "").trim()) continue;
+      if (!value) continue;
       if (input.tagName === "SELECT" && ![...input.options].some((o) => o.value === value)) continue;
-      input.value = value;
-      input.classList.add("filled");
-      filled.push(label);
+      const current = (input.value || "").trim();
+      if (!current) {
+        input.value = value;
+        input.classList.add("filled");
+        filled.push(label);
+      } else if (current.toLowerCase() !== value.toLowerCase()) {
+        differs.push({ key, label, value });
+      }
     }
-    status.textContent = filled.length
-      ? `Filled in ${filled.join(", ")}${usedAi ? " (read with AI)" : ""}. The highlighted fields came from your résumé: check them, change anything you like, then save.`
-      : "Your résumé didn't add anything new: the fields it covers are already filled in. You can still edit them.";
+    const parts = [];
+    if (filled.length) parts.push(`Filled in ${filled.join(", ")}${usedAi ? " (read with AI)" : ""}.`);
+    if (differs.length) parts.push(`Your résumé also has different ${differs.map((d) => d.label).join(", ")} from what's in your profile now.`);
+    if (!parts.length) parts.push("Your résumé matches your profile; nothing to change.");
+    parts.push("Highlighted fields came from your résumé: check them, edit anything, then save. Close without saving to undo.");
+    status.replaceChildren(document.createTextNode(parts.join(" ")));
+    if (differs.length) {
+      const replace = el("button", { type: "button", class: "ghost", onclick: () => {
+        for (const d of differs) { f[d.key].value = d.value; f[d.key].classList.add("filled"); }
+        replace.remove();
+        status.firstChild.textContent = `Updated ${differs.map((d) => d.label).join(", ")} from your résumé. Check the highlighted fields, then save. Close without saving to undo.`;
+      } }, `Use the résumé's ${differs.length === 1 ? differs[0].label : differs.length + " fields"}`);
+      status.append(document.createElement("br"), replace);
+    }
   } catch (err) {
     status.textContent = err.message || "We couldn't read that file. Try a PDF, Word (.docx) or text file.";
   } finally {
