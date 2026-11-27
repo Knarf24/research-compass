@@ -118,5 +118,27 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-10",
+    "kind": "submitted",
+    "title": "Spatial Computing Intern, Summer 2027",
+    "org": "Idaho National Laboratory (INL)",
+    "city": "Idaho Falls",
+    "state": "ID",
+    "fields": [
+      "Computer science",
+      "Robotics"
+    ],
+    "summary": "Onsite summer internship with INL's Spatial Computing team building AI for autonomous systems such as robotic labs and inspection platforms. Work covers 3D perception, SLAM, vision-language-action models, digital twins, edge AI and AR/VR interfaces.",
+    "url": "https://elhe.fa.us8.oraclecloud.com/hcmUI/CandidateExperience/en/sites/intern/job/2380",
+    "deadline": null,
+    "ends": null,
+    "paid": null,
+    "citizenship": "See official page",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
