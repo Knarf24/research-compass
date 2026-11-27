@@ -1,0 +1,35 @@
+name: Check the live site
+# Manual check: the site address answers over https, share pages have the right preview tags,
+# and the AI helper accepts requests from the site.
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Site address
+        default: https://research-compass.studentlabs.me/
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Site and share page
+        env:
+          SITE: ${{ inputs.site }}
+        run: |
+          set -e
+          curl -sS -o /dev/null -w "home %{http_code} %{url_effective}\n" -L "$SITE"
+          curl -sS -o /dev/null -w "data %{http_code}\n" "${SITE}data/listings.json"
+          curl -sS -o page.html -w "share %{http_code}\n" "${SITE}p/stanford-surf/"
+          grep -o '<meta property="og:[a-z]*" content="[^"]*"' page.html
+          curl -sS -o /dev/null -w "missing %{http_code}\n" "${SITE}p/no-such-program/"
+          curl -sS -o /dev/null -w "og.png %{http_code} %{content_type} %{size_download} bytes\n" "${SITE}og.png"
+      - name: AI helper accepts the site
+        env:
+          SITE: ${{ inputs.site }}
+        run: |
+          ORIGIN=$(python3 -c 'import os,urllib.parse as u; p=u.urlparse(os.environ["SITE"]); print(f"{p.scheme}://{p.netloc}")')
+          curl -sS -m 90 -X POST https://research-compass-ai-proxy.vercel.app/api/draft \
+            -H "Origin: $ORIGIN" -H "Content-Type: application/json" -D headers.txt \
+            -d '{"profile":{"name":"Sample Student","major":"Computer science","year":"Junior"},"target":{"type":"program","title":"SURF","org":"NIST","summary":"Paid summer research."},"kind":"intro"}' \
+            -w "\nHTTP %{http_code}\n" | tee out.txt
+          grep -i "access-control-allow-origin" headers.txt
+          grep -q "HTTP 200" out.txt
