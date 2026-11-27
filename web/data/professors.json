@@ -1,1 +1,1 @@
-{"updated":"2026-11-27","source":{"ok":false,"count":0,"note":"https://api.nsf.gov/services/v1/awards.json failed: <urlopen error Tunnel connection failed: 403 Forbidden (agent proxy: no rule or network setting allows this host)>","kept_previous":false},"people":[]}
+{"updated":"2026-11-27","source":{"ok":false,"count":0,"note":"https://api.nsf.gov/services/v1/awards.json failed: HTTP Error 400: ","kept_previous":false},"people":[]}
