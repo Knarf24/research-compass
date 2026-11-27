@@ -270,7 +270,11 @@ def fetch_reu_sites() -> list[dict]:
         REU_PAGES,
     )
     out = []
+    seen: set[str] = set()
     for a in awards:
+        if a.get("id") in seen:  # the NSF API sometimes repeats an award across pages
+            continue
+        seen.add(a.get("id"))
         title = clean_text(a.get("title"))
         if not re.search(r"\bREU\b", title) and "UNDERGRAD" not in (a.get("fundProgramName") or "").upper():
             continue

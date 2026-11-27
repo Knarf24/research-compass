@@ -296,6 +296,17 @@ def programs(args: dict) -> dict:
     return {"total": total, "items": out[:limit]}
 
 
+def program(args: dict) -> dict:
+    """One program, scored for the student (for shared links)."""
+    for r in DATA["listings"]:
+        if r["id"] == args.get("id"):
+            score, reasons, warnings, blocked = _score_listing(r, args.get("profile") or {}, _today(args))
+            item = {k: v for k, v in r.items() if not k.startswith("_")}
+            item.update(score=score, reasons=reasons, warnings=warnings, days_left=_days_left(r.get("deadline"), _today(args)))
+            return item
+    return {}
+
+
 def listing(args: dict) -> dict:
     for r in DATA["listings"]:
         if r["id"] == args["id"]:
@@ -701,7 +712,7 @@ def resume(args: dict) -> dict:
 
 
 # ---------------------------------------------------------------- bridge
-FUNCS = {f.__name__: f for f in (load, programs, listing, professors, professor, email, tracker, ics, resume)}
+FUNCS = {f.__name__: f for f in (load, programs, program, listing, professors, professor, email, tracker, ics, resume)}
 
 
 def call(name: str, args_json: str) -> str:

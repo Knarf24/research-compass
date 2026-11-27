@@ -181,3 +181,9 @@ details.howscore li { margin: 3px 0; }
 #subStatus:empty { display: none; }
 #subStatus.ok { color: var(--good); }
 #subStatus.err { color: var(--warn); }
+.sharemenu { margin-top: 8px; padding: 8px; border: 1px dashed var(--line); border-radius: 10px; }
+.shared-box { margin-bottom: 16px; }
+.shared-box .card { border-color: var(--gold); }
+.shared { padding-top: 10px; padding-bottom: 10px; }
+.shared .card + .card { margin-top: 16px; }
+.shared-title { font-size: 1.35rem; margin: 4px 0; }

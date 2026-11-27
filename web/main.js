@@ -143,7 +143,9 @@ function setup() {
   renderProfs();
   renderEmail();
   renderTracker();
-  showTab(location.hash.slice(1) || "programs");
+  const sharedId = location.hash.startsWith("#p=") ? decodeURIComponent(location.hash.slice(3)) : "";
+  showTab(sharedId ? "programs" : location.hash.slice(1) || "programs");
+  if (sharedId) showShared(sharedId);
   if (!profile.major) setTimeout(openProfile, 400);
 }
 
@@ -158,6 +160,48 @@ function showTab(name) {
 
 function showMe() {
   $("meLabel").textContent = profile.major ? `${profile.name || "You"} · ${profile.major} · ✏️ Edit` : "Set up your profile";
+}
+
+// ------------------------------------------------------------------ sharing
+// Each program has its own small page (p/<slug>/, made by scripts/share_pages.py) with a link preview.
+// The shared link opens that page on Research Compass first, then the official page.
+function shareSlug(id) {
+  return String(id).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 80) || "program";
+}
+function shareUrl(r) {
+  return new URL(`p/${shareSlug(r.id)}/`, location.href.split("#")[0]).href;
+}
+function toggleShare(btn, r) {
+  const open = btn.parentElement.nextElementSibling;
+  if (open && open.classList.contains("sharemenu")) { open.remove(); return; }
+  const url = shareUrl(r);
+  const text = `${r.title} (${r.org}): paid research opportunity on Research Compass`;
+  const menu = el("div", { class: "row sharemenu" },
+    ext(`https://wa.me/?text=${encodeURIComponent(text + "\n" + url)}`, "💬 WhatsApp", "ghost btn"),
+    el("button", { class: "ghost", onclick: async (e) => {
+      try { await navigator.clipboard.writeText(url); toast("Link copied. Paste it anywhere."); }
+      catch {
+        const box = el("input", { value: url, readonly: true, "aria-label": "Link to share" });
+        e.currentTarget.replaceWith(box);
+        box.select();
+        toast("Select the link and copy it.");
+      }
+    } }, "🔗 Copy link"),
+    el("a", { class: "ghost btn", href: `mailto:?subject=${encodeURIComponent(r.title)}&body=${encodeURIComponent(text + "\n\n" + url)}` }, "✉️ Email"),
+    navigator.share ? el("button", { class: "ghost", onclick: () => navigator.share({ title: r.title, text, url }).catch(() => {}) }, "📱 More apps") : null,
+  );
+  btn.parentElement.after(menu);
+}
+function showShared(id) {
+  const r = call("program", { id, profile });
+  const box = $("pShared");
+  if (!r.id) { toast("That shared opportunity isn't listed anymore."); return; }
+  box.replaceChildren(
+    el("div", { class: "block-head" }, el("h2", {}, "Shared with you"),
+      el("button", { class: "ghost", type: "button", onclick: () => { box.hidden = true; } }, "✕ Close")),
+    programCard(r));
+  box.hidden = false;
+  box.scrollIntoView({ block: "start" });
 }
 
 // ------------------------------------------------------------------ programs
@@ -208,6 +252,7 @@ function programCard(r) {
           ? ext(`https://www.google.com/search?q=${encodeURIComponent(`${r.org} REU ${r.title}`)}`, "Find the program site ↗", "ghost btn") : null,
         el("button", { class: "ghost", onclick: () => toggleSave(r) }, isSaved ? "★ Saved" : "☆ Save to tracker"),
         el("button", { class: "ghost", onclick: () => draftFor({ type: "program", ...r }) }, "✉️ Draft email"),
+        el("button", { class: "ghost", "aria-haspopup": "true", onclick: (e) => toggleShare(e.currentTarget, r) }, "↗ Share"),
       ),
       el("div", { class: "src small" }, `Source: ${r.source}${r.checked ? ", checked " + fmtDate(r.checked) : ""}`),
     ),

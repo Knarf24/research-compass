@@ -19,6 +19,7 @@ os.environ["COMPASS_TODAY"] = "2026-11-27"
 import compass  # noqa: E402
 import fetch_data  # noqa: E402
 import submissions  # noqa: E402
+import share_pages  # noqa: E402
 
 REU = [
     {"id": "2400001", "title": "REU Site: Machine Learning for Robotics and Autonomous Systems", "awardeeName": "NORTH CAROLINA STATE UNIVERSITY",
@@ -406,6 +407,21 @@ class MatchScoreTests(unittest.TestCase):
 
     def test_resume_reads_gpa(self):
         self.assertEqual(compass.resume({"text": RESUME + "\nGPA: 3.62/4.0", "today": "2026-11-27"})["gpa"], "3.62")
+
+
+class ShareTests(unittest.TestCase):
+    def test_share_page(self):
+        self.assertEqual(share_pages.slug("NSF-2548170"), "nsf-2548170")
+        self.assertEqual(share_pages.slug("usajobs:12 34"), "usajobs-12-34")
+        r = {"id": "stanford-surf", "kind": "university", "title": "SURF <Engineering>", "org": "Stanford", "city": "Stanford", "state": "CA",
+             "summary": "Summer research.", "url": "https://engineering.stanford.edu/SURF", "deadline": "2027-02-01", "paid": True,
+             "international": "yes", "fields": ["Computer science"], "source": "University programs", "checked": "2026-11-27"}
+        html = share_pages.page(r, "2026-11-27")
+        self.assertIn('<meta property="og:title" content="SURF &lt;Engineering&gt;">', html)
+        self.assertIn("https://knarf24.github.io/research-compass/p/stanford-surf/", html)
+        self.assertIn('href="https://engineering.stanford.edu/SURF"', html)
+        self.assertIn("../../#p=stanford-surf", html)
+        self.assertIn("Deadline Feb 1, 2027", html)
 
 
 if __name__ == "__main__":
