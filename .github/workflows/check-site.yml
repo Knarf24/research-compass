@@ -18,6 +18,8 @@ jobs:
           set -e
           curl -sS -o /dev/null -w "home %{http_code} %{url_effective}\n" -L "$SITE"
           curl -sS -o /dev/null -w "data %{http_code}\n" "${SITE}data/listings.json"
+          curl -sS "${SITE}sw.js" | head -2
+          curl -sS "${SITE}" | grep -o "Paid research programs\|Filters and sort" | sort -u
           curl -sS -o page.html -w "share %{http_code}\n" "${SITE}p/stanford-surf/"
           grep -o '<meta property="og:[a-z]*" content="[^"]*"' page.html
           curl -sS -o /dev/null -w "missing %{http_code}\n" "${SITE}p/no-such-program/"
