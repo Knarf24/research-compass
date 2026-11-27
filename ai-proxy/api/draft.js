@@ -19,7 +19,7 @@
 const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 // Used when the main model is overloaded (503) or out of free quota (429).
 const BACKUP_MODEL = process.env.GEMINI_BACKUP_MODEL || "gemini-flash-lite-latest";
-const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://research-campus.studentlabs.me,https://research-compass.studentlabs.me,https://knarf24.github.io")
+const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://research-compass.studentlabs.me,https://knarf24.github.io")
   .split(",").map((s) => s.trim()).filter(Boolean);
 const PER_IP_PER_HOUR = Number(process.env.PER_IP_PER_HOUR || 15);
 const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 200);

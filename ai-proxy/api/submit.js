@@ -22,7 +22,7 @@ import net from "node:net";
 const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const BACKUP_MODEL = process.env.GEMINI_BACKUP_MODEL || "gemini-flash-lite-latest";
 const REPO = process.env.SUBMIT_REPO || "Knarf24/research-compass";
-const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://research-campus.studentlabs.me,https://research-compass.studentlabs.me,https://knarf24.github.io")
+const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://research-compass.studentlabs.me,https://knarf24.github.io")
   .split(",").map((s) => s.trim()).filter(Boolean);
 const PER_IP_PER_HOUR = Number(process.env.SUBMIT_PER_IP_PER_HOUR || 3);
 const DAILY_LIMIT = Number(process.env.SUBMIT_DAILY_LIMIT || 30);
