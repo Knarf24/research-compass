@@ -82,7 +82,7 @@ function fillSelect(sel, values, keepFirst = true) {
   if (first) sel.append(first);
   for (const v of values) sel.append(el("option", { value: v }, v));
 }
-const KIND_LABEL = { reu: "NSF REU summer site", program: "National program", federal: "Federal student job", submitted: "Community submitted" };
+const KIND_LABEL = { university: "University-run program", reu: "NSF REU summer site", program: "National program", federal: "Federal student job", submitted: "Community submitted" };
 
 // ------------------------------------------------------------------ setup
 function setup() {
@@ -96,9 +96,9 @@ function setup() {
   const reu = sources["NSF REU Sites"]?.count || 0;
   $("stats").replaceChildren(
     stat(INFO.listings, "open opportunities"),
-    stat(reu, "NSF REU summer sites"),
     stat(INFO.professors, "professors with active NSF grants"),
-    stat(INFO.schools, "universities"),
+    stat(INFO.hbcu_listings, "HBCU programs and HBCU hosts"),
+    stat(INFO.intl_listings, "open to international students"),
   );
 
   $("dirs").replaceChildren(...INFO.directories.map((d) => el("div", { class: "dir" }, ext(d.url, d.name), el("span", { class: "small" }, d.what))));
@@ -107,16 +107,18 @@ function setup() {
   for (const b of $("tabs").querySelectorAll("button")) b.addEventListener("click", () => showTab(b.dataset.tab));
 
   // programs
-  for (const id of ["pField", "pState", "pKind", "pSort", "pEligible"]) $(id).addEventListener("change", () => { pLimit = 30; renderPrograms(); });
+  for (const id of ["pField", "pState", "pKind", "pSort", "pEligible", "pHbcu", "pIntl"]) $(id).addEventListener("change", () => { pLimit = 30; renderPrograms(); });
   $("pq").addEventListener("input", debounce(() => { pLimit = 30; renderPrograms(); }));
   $("pMore").addEventListener("click", () => { pLimit += 30; renderPrograms(); });
 
   // professors
-  for (const id of ["rField", "rState"]) $(id).addEventListener("change", renderProfs);
+  for (const id of ["rField", "rState", "rHbcu"]) $(id).addEventListener("change", renderProfs);
   for (const id of ["rq", "rSchool"]) $(id).addEventListener("input", debounce(renderProfs, 250));
 
   // email
-  for (const id of ["eKind", "eWhy", "eWhen"]) $(id).addEventListener("input", debounce(renderEmail, 150));
+  for (const id of ["eWhy", "eWhen"]) $(id).addEventListener("input", debounce(renderEmail, 150));
+  $("eKind").addEventListener("input", () => { aiDraft = false; $("tweakRow").hidden = true; renderEmail(); });
+  setupAi();
   $("eCopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(`Subject: ${$("eSubject").value}\n\n${$("eBody").value}`); toast("Copied. Paste it into your email."); }
     catch { $("eBody").select(); toast("Select all and copy."); }
@@ -162,6 +164,7 @@ function renderPrograms() {
   const filters = {
     q: $("pq").value, field: $("pField").value, state: $("pState").value, kind: $("pKind").value,
     sort: $("pSort").value, eligible: $("pEligible").checked, paid: !!profile.paid_only, limit: pLimit,
+    hbcu: $("pHbcu").checked, intl: $("pIntl").checked,
   };
   const res = call("programs", { profile, filters });
   $("pCount").textContent = res.total ? `${res.total.toLocaleString()} match${res.total === 1 ? "" : "es"}${profile.major ? ", ranked for you" : ". Set up your profile to rank them for you"}.` : "";
@@ -192,7 +195,8 @@ function programCard(r) {
       el("div", { class: "pills" },
         deadline,
         r.paid ? el("span", { class: "pill good" }, "💵 " + (r.pay || "Paid")) : null,
-        r.citizenship ? el("span", { class: "pill" }, "🪪 " + r.citizenship) : null,
+        intlPill(r),
+        r.hbcu_focus ? el("span", { class: "pill hbcu" }, "🎓 For HBCU students") : r.hbcu_host ? el("span", { class: "pill hbcu" }, "🎓 Hosted at an HBCU") : null,
         ...(r.fields || []).slice(0, 3).map((f) => el("span", { class: "pill soft" }, f)),
       ),
       r.reasons?.length ? el("div", { class: "why" }, "✓ " + r.reasons.join(" · ")) : null,
@@ -207,6 +211,13 @@ function programCard(r) {
       el("div", { class: "src small" }, `Source: ${r.source}${r.checked ? ", checked " + fmtDate(r.checked) : ""}`),
     ),
   );
+}
+
+function intlPill(r) {
+  const note = r.international_note || r.citizenship || "";
+  if (r.international === "yes") return el("span", { class: "pill good", title: note }, "🌍 Open to international students");
+  if (r.international === "no") return el("span", { class: "pill", title: note }, "🇺🇸 US citizens / permanent residents");
+  return el("span", { class: "pill soft", title: note }, "🌍 International: check eligibility");
 }
 
 function toggleSave(r) {
@@ -227,8 +238,8 @@ function renderProfs() {
     $("rList").replaceChildren(empty("The professor list is filled by the weekly update from NSF's public award data. It will appear here after the first run."));
     return;
   }
-  const filters = { q: $("rq").value, field: $("rField").value, state: $("rState").value, school: $("rSchool").value };
-  const hasQuery = filters.q || filters.field || filters.state || filters.school || profile.interests || profile.major;
+  const filters = { q: $("rq").value, field: $("rField").value, state: $("rState").value, school: $("rSchool").value, hbcu: $("rHbcu").checked };
+  const hasQuery = filters.q || filters.field || filters.state || filters.school || filters.hbcu || profile.interests || profile.major;
   if (!hasQuery) {
     $("rCount").textContent = "";
     $("rList").replaceChildren(empty("Type what you'd like to work on, or set up your profile, and we'll match you with researchers."));
@@ -248,7 +259,7 @@ function profCard(p) {
     el("div", { class: "body" },
       el("div", { class: "kind" }, "Researcher with an active NSF grant"),
       el("h3", {}, p.name),
-      el("div", { class: "where" }, `${p.school} · ${[p.city, p.state].filter(Boolean).join(", ")}`),
+      el("div", { class: "where" }, `${p.school} · ${[p.city, p.state].filter(Boolean).join(", ")} `, p.hbcu ? el("span", { class: "pill hbcu" }, "🎓 HBCU") : null),
       ...p.grants.map((g) => el("div", { class: "grant" },
         ext(g.url, g.title), el("span", { class: "small" }, g.ends ? ` · funded through ${fmtDate(g.ends)}` : ""),
         el("p", { class: "summary" }, g.summary))),
@@ -269,15 +280,70 @@ function profCard(p) {
 }
 
 // ------------------------------------------------------------------ email
+// ------------------------------------------------------------------ AI writer (optional)
+const AI_URL = (window.COMPASS_CONFIG && window.COMPASS_CONFIG.aiEndpoint) || "";
+let aiDraft = false;   // true once the AI wrote the current draft, so typing doesn't replace it
+
+function setupAi() {
+  if (!AI_URL) return;
+  for (const id of ["aiNote", "aiRow", "eInstrWrap"]) $(id).hidden = false;
+  $("aiWrite").addEventListener("click", () => aiWrite());
+  for (const b of $("tweakRow").querySelectorAll("button")) {
+    b.addEventListener("click", () => aiWrite(b.dataset.tweak === "new" ? "" : b.dataset.tweak, b.dataset.tweak !== "new"));
+  }
+}
+
+function slimTarget(t) {
+  if (!t) return { type: "program" };
+  const keep = ["type", "title", "org", "summary", "citizenship", "deadline", "contact", "name", "school"];
+  const out = Object.fromEntries(keep.filter((k) => t[k]).map((k) => [k, t[k]]));
+  if (t.grants) out.grants = t.grants.slice(0, 1).map((g) => ({ title: g.title, summary: g.summary }));
+  return out;
+}
+
+async function aiWrite(tweak = "", revise = false) {
+  const btns = [$("aiWrite"), ...$("tweakRow").querySelectorAll("button")];
+  btns.forEach((b) => { b.disabled = true; });
+  $("aiStatus").textContent = "✨ Writing…";
+  try {
+    const res = await fetch(AI_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profile, target: slimTarget(emailTarget), kind: $("eKind").value, why: $("eWhy").value, when: $("eWhen").value,
+        instruction: $("eInstr").value, tweak, previous: revise ? $("eBody").value : "",
+      }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error || "The AI writer is unavailable right now.");
+    $("eSubject").value = out.subject;
+    $("eBody").value = out.body;
+    aiDraft = true;
+    const words = (out.body.match(/\S+/g) || []).length;
+    $("eWords").textContent = `${words} words · written with AI`;
+    $("eTips").replaceChildren(...[...(out.notes || []), "Read it once out loud and change anything that doesn't sound like you."].map((t) => el("li", {}, t)));
+    $("tweakRow").hidden = false;
+    $("aiStatus").textContent = "";
+    updateMailto();
+  } catch (err) {
+    $("aiStatus").textContent = err.message + " The quick template below still works.";
+  } finally {
+    btns.forEach((b) => { b.disabled = false; });
+  }
+}
+
 function draftFor(target) {
   emailTarget = target;
   $("eKind").value = "intro";
+  aiDraft = false;
+  $("tweakRow").hidden = true;
   showTab("email");
   renderEmail();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function renderEmail() {
+  if (aiDraft) return;
   const t = emailTarget;
   $("eTarget").textContent = t
     ? `Writing to: ${t.type === "professor" ? `${t.name}, ${t.school}` : `${t.title} (${t.org})`}`
@@ -384,6 +450,7 @@ function setupProfileForm() {
     profile = {
       ...data,
       paid_only: f.paid_only.checked,
+      hbcu: f.hbcu.checked,
       fields: [...$("pfFields").querySelectorAll("button[aria-pressed=true]")].map((b) => b.dataset.v),
       states: (data.states || "").toUpperCase().split(/[^A-Z]+/).filter((s) => s.length === 2),
     };
@@ -397,6 +464,7 @@ function openProfile() {
   for (const k of ["name", "school", "year", "major", "interests", "skills", "project", "citizen"]) f[k].value = profile[k] || "";
   f.states.value = (profile.states || []).join(", ");
   f.paid_only.checked = !!profile.paid_only;
+  f.hbcu.checked = !!profile.hbcu;
   const chosen = new Set(profile.fields || []);
   $("pfFields").replaceChildren(...INFO.fields.map((v) => el("button", {
     type: "button", class: "pill toggle", "data-v": v, "aria-pressed": String(chosen.has(v)),

@@ -37,6 +37,8 @@ OUT_DIR = ROOT / "web" / "data"
 CURATED = ROOT / "data" / "curated_programs.json"
 SUBMITTED = ROOT / "data" / "submitted.json"
 DIRECTORIES = ROOT / "data" / "directories.json"
+HBCUS = ROOT / "data" / "hbcus.json"
+UNIVERSITY_FILE = ROOT / "data" / "university_programs.json"
 
 NSF_API = "https://api.nsf.gov/services/v1/awards.json"
 NSF_AWARD_PAGE = "https://www.nsf.gov/awardsearch/showAward?AWD_ID={id}"
@@ -221,6 +223,41 @@ def nsf_search(params: dict[str, str], pages: int) -> list[dict]:
     return awards
 
 
+# ---------------------------------------------------------------- HBCUs
+def _norm(name: str) -> str:
+    n = name.lower().replace("&", " and ").replace("a and m", "agricultural and mechanical").replace("a and t", "agricultural and technical")
+    n = re.sub(r"\bst\.?\b", "saint", n)
+    n = re.sub(r"[^a-z ]", " ", n)
+    n = re.sub(r"\b(the|campus|main)\b", " ", n)
+    return re.sub(r"\s+", " ", n).strip()
+
+
+def load_hbcus(path: Path | None = None) -> set[tuple[str, str]]:
+    """(normalized name, state) for every HBCU on the Department of Education list."""
+    path = path or HBCUS
+    if not path.exists():
+        return set()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    out = set()
+    for inst in data["institutions"]:
+        names = [inst["name"]] + data.get("aliases", {}).get(inst["name"], [])
+        for n in names:
+            out.add((_norm(n), inst["state"]))
+    return out
+
+
+HBCU_SET: set[tuple[str, str]] = set()
+HBCU_WORDS = re.compile(r"\b(HBCUs?|historically black colleges?)\b", re.I)
+
+
+def is_hbcu(name: str, state: str) -> bool:
+    global HBCU_SET
+    if not HBCU_SET:
+        HBCU_SET = load_hbcus()
+    n = _norm(name)
+    return (n, state) in HBCU_SET or any(n.startswith(h + " ") and st == state for h, st in HBCU_SET)
+
+
 # ---------------------------------------------------------------- sources
 NSF_FIELDS = "id,title,awardeeName,awardeeCity,awardeeStateCode,piFirstName,piLastName,startDate,expDate,abstractText,fundProgramName,estimatedTotalAmt"
 
@@ -259,6 +296,10 @@ def fetch_reu_sites() -> list[dict]:
             "citizenship": "US citizen or permanent resident",
             "years": ["Freshman", "Sophomore", "Junior", "Senior"],
             "contact": " ".join(x for x in [a.get("piFirstName"), a.get("piLastName")] if x),
+            "hbcu_host": is_hbcu(a.get("awardeeName") or "", state),
+            "hbcu_focus": bool(HBCU_WORDS.search(abstract)),
+            "international": "no",
+            "international_note": "NSF REU stipends are for US citizens, US nationals and permanent residents.",
             "source": "NSF REU Sites",
         })
     return out
@@ -297,6 +338,7 @@ def fetch_professors() -> list[dict]:
                 "state": state,
                 "fields": [],
                 "grants": [],
+                "hbcu": is_hbcu(a.get("awardeeName") or "", state),
             })
             if field not in person["fields"]:
                 person["fields"].append(field)
@@ -356,6 +398,7 @@ def fetch_usajobs() -> list[dict]:
                 "paid": bool(pay.get("MinimumRange")),
                 "pay": _pay_text(pay),
                 "citizenship": "US citizen (federal job)",
+                "international": "no",
                 "years": ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"],
                 "source": "USAJOBS",
             }
@@ -392,6 +435,8 @@ def load_file_listings(path: Path, source: str) -> list[dict]:
     items = json.loads(path.read_text(encoding="utf-8"))
     for it in items:
         it.setdefault("source", source)
+        it.setdefault("hbcu_host", is_hbcu(it.get("org", ""), it.get("state", "")))
+        it.setdefault("international", "check")
         it.setdefault("fields", tag_fields(it.get("title", "") + " " + it.get("summary", "")))
     return items
 
@@ -431,9 +476,10 @@ def build(out_dir: Path = OUT_DIR) -> dict:
             report[name] = {"ok": False, "count": len(kept), "note": str(err)[:200], "kept_previous": bool(kept)}
             print(f"[warn] {name}: {err}", file=sys.stderr)
 
+    by_source["University programs"] = load_file_listings(UNIVERSITY_FILE, "University programs")
     by_source["Hand-checked programs"] = load_file_listings(CURATED, "Hand-checked programs")
     by_source["Submitted"] = load_file_listings(SUBMITTED, "Submitted")
-    for name in ("Hand-checked programs", "Submitted"):
+    for name in ("University programs", "Hand-checked programs", "Submitted"):
         report[name] = {"ok": True, "count": len(by_source[name])}
 
     dropped = 0

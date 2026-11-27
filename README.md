@@ -10,15 +10,21 @@ professor, and deadlines slip by.
 opportunities for you, explains why each one fits, finds professors with funded research in your area, drafts the
 cold email, and tracks every deadline. Free, no sign-up, and your data never leaves your browser.
 
-- **🧭 Programs:** NSF REU summer sites at US campuses, national lab and agency programs (DOE, NASA, NIST, NOAA and
-  more), federal student jobs, and reviewed community submissions. Each one gets a match score, the reasons it fits,
+- **🧭 Programs:** university-run summer research programs, NSF REU summer sites at US campuses, national lab and
+  agency programs (DOE, NASA, NIST, NOAA and more), federal student jobs, and reviewed community submissions. Each one gets a match score, the reasons it fits,
   and warnings (for example "US citizens only" or "deadline in 5 days"). Filter by field, state and type, or show only
   the ones you qualify for.
 - **🔬 Professor finder:** researchers at US universities with an **active NSF grant**, matched to what you want to
   work on using the words in their grant summaries. Each links to the public NSF award page and helps you find
   their official faculty page. No emails are collected.
-- **✉️ Email writer:** a first email, a question, a follow-up or a thank-you, written from your profile and the
-  program or professor's real project title, with tips (length, placeholders, what to attach).
+- **🎓 HBCU students:** programs made for HBCU students and programs hosted at HBCUs (matched against the
+  Department of Education HBCU list) are badged, can be filtered, and rank first when you say you attend an HBCU.
+- **🌍 International students:** every listing says whether international students can apply (yes, no, or check).
+  Programs open to them rank first; US-citizens-only programs are clearly flagged.
+- **✉️ AI email writer:** Claude writes a short, specific email from your profile and the program or professor's
+  real project, with a different structure each time, and can make it shorter, warmer, more formal or more
+  confident. The API key stays in a small Vercel function (`ai-proxy/`). Without it, a built-in template writer
+  is used.
 - **📋 Tracker:** save programs and professors, move them through stages (Interested → Emailed → Applied →
   Interview → Offer), get reminders ("emailed 9 days ago, send a follow-up"), and download every deadline to
   your calendar with a 7-day alert. Back up and restore as a file.
@@ -37,7 +43,9 @@ new data in `web/data/`, and republishes the site. Nothing has to be done by han
 | [NSF Award Search API](https://resources.research.gov/common/webapi/awardapisearch-v1.htm) | Active NSF **REU Site** awards (each is a paid summer program at a campus) | Public API, no key |
 | NSF Award Search API | Professors with an active, recent NSF research grant, for the professor finder | Public API, no key |
 | [USAJOBS API](https://developer.usajobs.gov/) | Federal jobs open to students (the "student" hiring path) | Free key; **optional** |
+| `data/university_programs.json` | University-run summer research programs, including ones made for HBCU students | Checked by hand each term |
 | `data/curated_programs.json` | National programs we check by hand each term, with the date checked | Edited in the repo |
+| `data/hbcus.json` | The Department of Education HBCU list, used to badge HBCU hosts | Edited in the repo |
 | `data/submitted.json` | Listings people send in with the issue form, after review | Edited in the repo |
 
 - Listings whose deadline (or award end date) has passed are removed each week.
@@ -51,6 +59,11 @@ new data in `web/data/`, and republishes the site. Nothing has to be done by han
 - No bulk collection of professors' emails or other personal details; we link to official faculty pages instead.
 - No scraping of sites whose terms forbid it, and no LinkedIn data.
 - Community submissions are reviewed before they go live.
+
+## Turning on the AI email writer
+
+See `ai-proxy/README.md`: an Anthropic API key with a monthly spend limit, a Vercel project with Root Directory
+`ai-proxy`, then put its URL in `web/config.js` as `aiEndpoint`.
 
 ## Turning on USAJOBS (optional)
 

@@ -187,7 +187,35 @@ class Browser(unittest.TestCase):
         res = self.call("programs", {"filters": {"state": "FL"}, "today": "2026-11-27"})
         self.assertEqual([i["id"] for i in res["items"]], ["nsf-2400002"])
         res = self.call("programs", {"filters": {"sort": "deadline"}, "today": "2026-11-27"})
-        self.assertEqual(res["items"][0]["id"], "usajobs-801", "soonest deadline first")
+        days = [i["days_left"] for i in res["items"] if i["days_left"] is not None]
+        self.assertEqual(days, sorted(days), "soonest deadline first")
+        self.assertIn("usajobs-801", [i["id"] for i in res["items"][:4]])
+
+    def test_hbcu_priority(self):
+        me = {"major": "Ecology and environment", "hbcu": True}
+        res = self.call("programs", {"profile": me, "today": "2026-11-27"})
+        top = res["items"][0]
+        self.assertTrue(top.get("hbcu_focus") or top.get("hbcu_host"))
+        self.assertTrue(any("HBCU" in r for r in top["reasons"]))
+        only = self.call("programs", {"profile": {}, "filters": {"hbcu": True}, "today": "2026-11-27"})
+        self.assertTrue(only["total"] >= 4 and all(i.get("hbcu_focus") or i.get("hbcu_host") for i in only["items"]))
+
+    def test_international_students(self):
+        me = {"major": "Biology", "citizen": "no"}
+        res = self.call("programs", {"profile": me, "today": "2026-11-27"})
+        top = res["items"][0]
+        self.assertEqual(top["international"], "yes")
+        self.assertTrue(any("international" in r.lower() for r in top["reasons"]))
+        reu = next(i for i in res["items"] if i["kind"] == "reu")
+        self.assertTrue(any("citizen" in w.lower() for w in reu["warnings"]))
+        open_only = self.call("programs", {"profile": me, "filters": {"intl": True}, "today": "2026-11-27"})
+        self.assertTrue(open_only["items"] and all(i["international"] == "yes" for i in open_only["items"]))
+
+    def test_hbcu_hosts_are_recognised(self):
+        self.assertTrue(fetch_data.is_hbcu("North Carolina Agricultural & Technical State University", "NC"))
+        self.assertTrue(fetch_data.is_hbcu("Lincoln University", "PA"))
+        self.assertFalse(fetch_data.is_hbcu("Lincoln University", "NE"))
+        self.assertFalse(fetch_data.is_hbcu("Duke University", "NC"))
 
     def test_professor_finder(self):
         res = self.call("professors", {"profile": {"interests": "deep learning for cancer imaging"}, "filters": {}})

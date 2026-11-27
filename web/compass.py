@@ -106,6 +106,9 @@ def load(args: dict) -> dict:
     states = sorted({r["state"] for r in items if r.get("state")} | {p["state"] for p in plist if p.get("state")})
     return {
         "listings": len(items),
+        "hbcu_listings": sum(1 for r in items if r.get("hbcu_focus") or r.get("hbcu_host")),
+        "intl_listings": sum(1 for r in items if r.get("international") == "yes"),
+        "hbcu_professors": sum(1 for p in plist if p.get("hbcu")),
         "professors": len(plist),
         "schools": len({p["school"] for p in plist}),
         "fields": fields,
@@ -161,10 +164,21 @@ def _score_listing(r: dict, profile: dict, today: dt.date) -> tuple[int, list[st
         if profile.get("paid_only"):
             reasons.append("Paid")
 
-    cit = r.get("citizenship") or ""
-    if profile.get("citizen") == "no" and CITIZEN_ONLY.search(cit):
-        score -= 45
-        warnings.append(f"Requires: {cit}")
+    intl = r.get("international") or ("no" if CITIZEN_ONLY.search(r.get("citizenship") or "") else "check")
+    if profile.get("citizen") == "no":
+        if intl == "yes":
+            score += 22
+            reasons.append("Open to international students")
+        elif intl == "no":
+            score -= 45
+            warnings.append("Requires US citizenship or permanent residency")
+        else:
+            warnings.append("Check whether international students can apply")
+
+    hbcu = r.get("hbcu_focus") or r.get("hbcu_host")
+    if hbcu and profile.get("hbcu"):
+        score += 18
+        reasons.append("Made for HBCU students" if r.get("hbcu_focus") else "Hosted at an HBCU")
 
     st = r.get("state")
     pref = profile.get("states") or []
@@ -199,6 +213,10 @@ def programs(args: dict) -> dict:
         if f.get("kind") and r.get("kind") != f["kind"]:
             continue
         if f.get("paid") and not r.get("paid"):
+            continue
+        if f.get("hbcu") and not (r.get("hbcu_focus") or r.get("hbcu_host")):
+            continue
+        if f.get("intl") and r.get("international") != "yes":
             continue
         if q_terms and not all(t in r["_text"] or t in (r.get("state") or "").lower() for t in q_terms):
             continue
@@ -244,6 +262,8 @@ def professors(args: dict) -> dict:
             continue
         if f.get("school") and f["school"].lower() not in p["school"].lower():
             continue
+        if f.get("hbcu") and not p.get("hbcu"):
+            continue
         name_hit = bool(q) and q.lower() in p["_text"]
         overlap = {t: idf.get(t, 0) for t in want if t in p["_terms"]}
         if q and not overlap and not name_hit:
@@ -266,7 +286,10 @@ def professors(args: dict) -> dict:
         if pref and p.get("state") in pref:
             score += 10
             reasons.append(f"In {p['state']}, a state you picked")
-        if not want and not field_hit and not f.get("field") and not f.get("school") and not f.get("state"):
+        if p.get("hbcu") and profile.get("hbcu"):
+            score += 10
+            reasons.append("At an HBCU")
+        if not want and not field_hit and not f.get("field") and not f.get("school") and not f.get("state") and not f.get("hbcu"):
             continue
         item = {k: v for k, v in p.items() if not k.startswith("_")}
         item.update(score=min(100, round(score)), reasons=reasons,

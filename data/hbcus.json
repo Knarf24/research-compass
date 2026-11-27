@@ -1,0 +1,541 @@
+{
+ "source": "U.S. Department of Education, White House Initiative on HBCUs",
+ "source_url": "https://sites.ed.gov/whhbcu/one-hundred-and-five-historically-black-colleges-and-universities/",
+ "checked": "2026-11-27",
+ "note": "Law-school and branch campus rows merged into their parent institution. Aliases cover names NSF uses (for example 'Agricultural & Technical').",
+ "aliases": {
+  "North Carolina A & T State University": [
+   "North Carolina Agricultural & Technical State University",
+   "North Carolina Agricultural and Technical State University"
+  ],
+  "Alabama A & M University": [
+   "Alabama Agricultural and Mechanical University"
+  ],
+  "Prairie View A & M University": [
+   "Prairie View A&M University",
+   "Prairie View A & M University"
+  ],
+  "Southern University and A & M College": [
+   "Southern University and Agricultural & Mechanical College",
+   "Southern University and A&M College"
+  ],
+  "Florida Agricultural and Mechanical University": [
+   "Florida A&M University"
+  ],
+  "Edward Waters College": [
+   "Edward Waters University"
+  ],
+  "Bluefield State College": [
+   "Bluefield State University"
+  ],
+  "Wiley College": [
+   "Wiley University"
+  ],
+  "Saint Augustine's University": [
+   "St. Augustine's University"
+  ],
+  "Johnson C Smith University": [
+   "Johnson C. Smith University"
+  ],
+  "St Philip's College": [
+   "St. Philip's College"
+  ]
+ },
+ "institutions": [
+  {
+   "name": "Alabama A & M University",
+   "city": "Normal",
+   "state": "AL"
+  },
+  {
+   "name": "Alabama State University",
+   "city": "Montgomery",
+   "state": "AL"
+  },
+  {
+   "name": "Bishop State Community College",
+   "city": "Mobile",
+   "state": "AL"
+  },
+  {
+   "name": "Gadsden State Community College",
+   "city": "Gadsden",
+   "state": "AL"
+  },
+  {
+   "name": "H Councill Trenholm State Community College",
+   "city": "Montgomery",
+   "state": "AL"
+  },
+  {
+   "name": "J. F. Drake State Community and Technical College",
+   "city": "Huntsville",
+   "state": "AL"
+  },
+  {
+   "name": "Lawson State Community College",
+   "city": "Birmingham",
+   "state": "AL"
+  },
+  {
+   "name": "Miles College",
+   "city": "Fairfield",
+   "state": "AL"
+  },
+  {
+   "name": "Oakwood University",
+   "city": "Huntsville",
+   "state": "AL"
+  },
+  {
+   "name": "Shelton State Community College",
+   "city": "Tuscaloosa",
+   "state": "AL"
+  },
+  {
+   "name": "Stillman College",
+   "city": "Tuscaloosa",
+   "state": "AL"
+  },
+  {
+   "name": "Talladega College",
+   "city": "Talladega",
+   "state": "AL"
+  },
+  {
+   "name": "Tuskegee University",
+   "city": "Tuskegee",
+   "state": "AL"
+  },
+  {
+   "name": "Arkansas Baptist College",
+   "city": "Little Rock",
+   "state": "AR"
+  },
+  {
+   "name": "Philander Smith College",
+   "city": "Little Rock",
+   "state": "AR"
+  },
+  {
+   "name": "Shorter College",
+   "city": "North Little Rock",
+   "state": "AR"
+  },
+  {
+   "name": "University of Arkansas at Pine Bluff",
+   "city": "Pine Bluff",
+   "state": "AR"
+  },
+  {
+   "name": "Delaware State University",
+   "city": "Dover",
+   "state": "DE"
+  },
+  {
+   "name": "Howard University",
+   "city": "Washington",
+   "state": "DC"
+  },
+  {
+   "name": "University of the District of Columbia",
+   "city": "Washington",
+   "state": "DC"
+  },
+  {
+   "name": "Bethune-Cookman University",
+   "city": "Daytona Beach",
+   "state": "FL"
+  },
+  {
+   "name": "Edward Waters College",
+   "city": "Jacksonville",
+   "state": "FL"
+  },
+  {
+   "name": "Florida Agricultural and Mechanical University",
+   "city": "Tallahassee",
+   "state": "FL"
+  },
+  {
+   "name": "Florida Memorial University",
+   "city": "Miami Gardens",
+   "state": "FL"
+  },
+  {
+   "name": "Albany State University",
+   "city": "Albany",
+   "state": "GA"
+  },
+  {
+   "name": "Clark Atlanta University",
+   "city": "Atlanta",
+   "state": "GA"
+  },
+  {
+   "name": "Fort Valley State University",
+   "city": "Fort Valley",
+   "state": "GA"
+  },
+  {
+   "name": "Interdenominational Theological Center",
+   "city": "Atlanta",
+   "state": "GA"
+  },
+  {
+   "name": "Morehouse College",
+   "city": "Atlanta",
+   "state": "GA"
+  },
+  {
+   "name": "Morehouse School of Medicine",
+   "city": "Atlanta",
+   "state": "GA"
+  },
+  {
+   "name": "Paine College",
+   "city": "Augusta",
+   "state": "GA"
+  },
+  {
+   "name": "Savannah State University",
+   "city": "Savannah",
+   "state": "GA"
+  },
+  {
+   "name": "Spelman College",
+   "city": "Atlanta",
+   "state": "GA"
+  },
+  {
+   "name": "Kentucky State University",
+   "city": "Frankfort",
+   "state": "KY"
+  },
+  {
+   "name": "Simmons College of Kentucky",
+   "city": "Louisville",
+   "state": "KY"
+  },
+  {
+   "name": "Dillard University",
+   "city": "New Orleans",
+   "state": "LA"
+  },
+  {
+   "name": "Grambling State University",
+   "city": "Grambling",
+   "state": "LA"
+  },
+  {
+   "name": "Southern University and A & M College",
+   "city": "Baton Rouge",
+   "state": "LA"
+  },
+  {
+   "name": "Southern University at New Orleans",
+   "city": "New Orleans",
+   "state": "LA"
+  },
+  {
+   "name": "Southern University at Shreveport",
+   "city": "Shreveport",
+   "state": "LA"
+  },
+  {
+   "name": "Xavier University of Louisiana",
+   "city": "New Orleans",
+   "state": "LA"
+  },
+  {
+   "name": "Bowie State University",
+   "city": "Bowie",
+   "state": "MD"
+  },
+  {
+   "name": "Coppin State University",
+   "city": "Baltimore",
+   "state": "MD"
+  },
+  {
+   "name": "Morgan State University",
+   "city": "Baltimore",
+   "state": "MD"
+  },
+  {
+   "name": "University of Maryland Eastern Shore",
+   "city": "Princess Anne",
+   "state": "MD"
+  },
+  {
+   "name": "Alcorn State University",
+   "city": "Alcorn State",
+   "state": "MS"
+  },
+  {
+   "name": "Coahoma Community College",
+   "city": "Clarksdale",
+   "state": "MS"
+  },
+  {
+   "name": "Jackson State University",
+   "city": "Jackson",
+   "state": "MS"
+  },
+  {
+   "name": "Mississippi Valley State University",
+   "city": "Itta Bena",
+   "state": "MS"
+  },
+  {
+   "name": "Rust College",
+   "city": "Holly Springs",
+   "state": "MS"
+  },
+  {
+   "name": "Tougaloo College",
+   "city": "Tougaloo",
+   "state": "MS"
+  },
+  {
+   "name": "Harris-Stowe State University",
+   "city": "Saint Louis",
+   "state": "MO"
+  },
+  {
+   "name": "Lincoln University",
+   "city": "Jefferson City",
+   "state": "MO"
+  },
+  {
+   "name": "Bennett College",
+   "city": "Greensboro",
+   "state": "NC"
+  },
+  {
+   "name": "Elizabeth City State University",
+   "city": "Elizabeth City",
+   "state": "NC"
+  },
+  {
+   "name": "Fayetteville State University",
+   "city": "Fayetteville",
+   "state": "NC"
+  },
+  {
+   "name": "Johnson C Smith University",
+   "city": "Charlotte",
+   "state": "NC"
+  },
+  {
+   "name": "Livingstone College",
+   "city": "Salisbury",
+   "state": "NC"
+  },
+  {
+   "name": "North Carolina A & T State University",
+   "city": "Greensboro",
+   "state": "NC"
+  },
+  {
+   "name": "North Carolina Central University",
+   "city": "Durham",
+   "state": "NC"
+  },
+  {
+   "name": "Saint Augustine's University",
+   "city": "Raleigh",
+   "state": "NC"
+  },
+  {
+   "name": "Shaw University",
+   "city": "Raleigh",
+   "state": "NC"
+  },
+  {
+   "name": "Winston-Salem State University",
+   "city": "Winston-Salem",
+   "state": "NC"
+  },
+  {
+   "name": "Central State University",
+   "city": "Wilberforce",
+   "state": "OH"
+  },
+  {
+   "name": "Wilberforce University",
+   "city": "Wilberforce",
+   "state": "OH"
+  },
+  {
+   "name": "Langston University",
+   "city": "Langston",
+   "state": "OK"
+  },
+  {
+   "name": "Cheyney University of Pennsylvania",
+   "city": "Cheyney",
+   "state": "PA"
+  },
+  {
+   "name": "Lincoln University",
+   "city": "Lincoln University",
+   "state": "PA"
+  },
+  {
+   "name": "Allen University",
+   "city": "Columbia",
+   "state": "SC"
+  },
+  {
+   "name": "Benedict College",
+   "city": "Columbia",
+   "state": "SC"
+  },
+  {
+   "name": "Claflin University",
+   "city": "Orangeburg",
+   "state": "SC"
+  },
+  {
+   "name": "Clinton College",
+   "city": "Rock Hill",
+   "state": "SC"
+  },
+  {
+   "name": "Denmark Technical College",
+   "city": "Denmark",
+   "state": "SC"
+  },
+  {
+   "name": "Morris College",
+   "city": "Sumter",
+   "state": "SC"
+  },
+  {
+   "name": "South Carolina State University",
+   "city": "Orangeburg",
+   "state": "SC"
+  },
+  {
+   "name": "Voorhees College",
+   "city": "Denmark",
+   "state": "SC"
+  },
+  {
+   "name": "American Baptist College",
+   "city": "Nashville",
+   "state": "TN"
+  },
+  {
+   "name": "Fisk University",
+   "city": "Nashville",
+   "state": "TN"
+  },
+  {
+   "name": "Lane College",
+   "city": "Jackson",
+   "state": "TN"
+  },
+  {
+   "name": "Le Moyne-Owen College",
+   "city": "Memphis",
+   "state": "TN"
+  },
+  {
+   "name": "Meharry Medical College",
+   "city": "Nashville",
+   "state": "TN"
+  },
+  {
+   "name": "Tennessee State University",
+   "city": "Nashville",
+   "state": "TN"
+  },
+  {
+   "name": "Huston-Tillotson University",
+   "city": "Austin",
+   "state": "TX"
+  },
+  {
+   "name": "Jarvis Christian College",
+   "city": "Hawkins",
+   "state": "TX"
+  },
+  {
+   "name": "Paul Quinn College",
+   "city": "Dallas",
+   "state": "TX"
+  },
+  {
+   "name": "Prairie View A & M University",
+   "city": "Prairie View",
+   "state": "TX"
+  },
+  {
+   "name": "Southwestern Christian College",
+   "city": "Terrell",
+   "state": "TX"
+  },
+  {
+   "name": "St Philip's College",
+   "city": "San Antonio",
+   "state": "TX"
+  },
+  {
+   "name": "Texas College",
+   "city": "Tyler",
+   "state": "TX"
+  },
+  {
+   "name": "Texas Southern University",
+   "city": "Houston",
+   "state": "TX"
+  },
+  {
+   "name": "Wiley College",
+   "city": "Marshall",
+   "state": "TX"
+  },
+  {
+   "name": "University of the Virgin Islands",
+   "city": "Charlotte Amalie",
+   "state": "VI"
+  },
+  {
+   "name": "Hampton University",
+   "city": "Hampton",
+   "state": "VA"
+  },
+  {
+   "name": "Norfolk State University",
+   "city": "Norfolk",
+   "state": "VA"
+  },
+  {
+   "name": "Virginia State University",
+   "city": "Petersburg",
+   "state": "VA"
+  },
+  {
+   "name": "Virginia Union University",
+   "city": "Richmond",
+   "state": "VA"
+  },
+  {
+   "name": "Virginia University of Lynchburg",
+   "city": "Lynchburg",
+   "state": "VA"
+  },
+  {
+   "name": "Bluefield State College",
+   "city": "Bluefield",
+   "state": "WV"
+  },
+  {
+   "name": "West Virginia State University",
+   "city": "Institute",
+   "state": "WV"
+  }
+ ]
+}

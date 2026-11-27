@@ -25,7 +25,9 @@
     "paid": true,
     "citizenship": "See official eligibility page",
     "years": [],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   },
   {
     "id": "doe-cci",
@@ -51,7 +53,9 @@
     "years": [
       "Community college"
     ],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   },
   {
     "id": "nist-surf",
@@ -84,7 +88,9 @@
       "Junior",
       "Senior"
     ],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "no",
+    "hbcu_focus": false
   },
   {
     "id": "nasa-ostem",
@@ -109,7 +115,9 @@
     "paid": true,
     "citizenship": "US citizen",
     "years": [],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "no",
+    "hbcu_focus": false
   },
   {
     "id": "noaa-hollings",
@@ -134,7 +142,9 @@
     "pay": "$700 a week internship + up to $9,500 a year",
     "citizenship": "See official FAQ",
     "years": [],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   },
   {
     "id": "amgen-scholars",
@@ -148,14 +158,16 @@
       "Biomedical and health",
       "Chemistry"
     ],
-    "summary": "Summer research program in science and biotechnology at host universities. Summer 2027 applications are due February 1, 2027. Check the US program page for stipend and eligibility.",
+    "summary": "Summer research program in science and biotechnology at host universities. Summer 2027 applications are due February 1, 2027. Check the US program page for stipend and eligibility. Host universities include Howard University, an HBCU.",
     "url": "https://amgenscholars.com/",
     "deadline": "2027-02-01",
     "ends": null,
     "paid": null,
     "citizenship": "See official eligibility page",
     "years": [],
-    "checked": "2026-11-27"
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   },
   {
     "id": "dod-smart",
@@ -179,6 +191,33 @@
     "ends": null,
     "paid": true,
     "citizenship": "See official eligibility page",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
+  },
+  {
+    "id": "nasa-murep",
+    "kind": "program",
+    "title": "NASA MUREP (Minority University Research and Education Project)",
+    "org": "NASA Office of STEM Engagement",
+    "city": "",
+    "state": "",
+    "fields": [
+      "Mechanical and aerospace",
+      "Computer science",
+      "Earth and ocean sciences",
+      "Physics and astronomy",
+      "Electrical engineering"
+    ],
+    "summary": "NASA's program for HBCUs, Tribal Colleges and other minority-serving institutions: research funding for schools and opportunities for their students. Check the page for current student opportunities.",
+    "url": "https://www.nasa.gov/learning-resources/minority-university-research-education-project/",
+    "deadline": null,
+    "ends": null,
+    "paid": null,
+    "citizenship": "See official page",
+    "international": "check",
+    "hbcu_focus": true,
     "years": [],
     "checked": "2026-11-27"
   }

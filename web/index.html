@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Research Compass</title>
-  <meta name="description" content="Find paid undergraduate research in the US, matched to you: NSF REU sites, national lab and agency programs, federal student jobs, and professors with active NSF grants. Draft the cold email and track every deadline. Python running in your browser; refreshed weekly from public data.">
+  <meta name="description" content="Find paid undergraduate research in the US, matched to you: university-run programs, NSF REU sites, HBCU programs, options for international students, national lab and agency programs, federal student jobs, and professors with active NSF grants. Draft the cold email and track every deadline. Python running in your browser; refreshed weekly from public data.">
   <meta name="theme-color" content="#0b1426">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
@@ -47,6 +47,7 @@
         <select id="pState" aria-label="State"><option value="">All states</option></select>
         <select id="pKind" aria-label="Type">
           <option value="">All types</option>
+          <option value="university">University-run programs</option>
           <option value="reu">NSF REU summer sites</option>
           <option value="program">National programs</option>
           <option value="federal">Federal student jobs</option>
@@ -58,6 +59,8 @@
           <option value="name">A to Z</option>
         </select>
         <label class="check"><input type="checkbox" id="pEligible"> Only ones I qualify for</label>
+        <label class="check"><input type="checkbox" id="pHbcu"> 🎓 HBCU programs</label>
+        <label class="check"><input type="checkbox" id="pIntl"> 🌍 Open to international students</label>
       </div>
       <p class="small" id="pCount"></p>
       <div class="list" id="pList"></div>
@@ -81,6 +84,7 @@
         <select id="rField" aria-label="Field"><option value="">All fields</option></select>
         <select id="rState" aria-label="State"><option value="">All states</option></select>
         <input id="rSchool" type="search" placeholder="University (optional)" aria-label="University">
+        <label class="check"><input type="checkbox" id="rHbcu"> 🎓 Only at HBCUs</label>
       </div>
       <p class="small" id="rCount"></p>
       <div class="list" id="rList"></div>
@@ -91,6 +95,7 @@
       <div class="emailgrid">
         <div class="card">
           <h2>Write a cold email</h2>
+          <p class="small" id="aiNote" hidden>✨ The AI reads your profile and the program or professor's real project, then writes a short, specific email. Every draft is different. Always read it and make it yours before sending.</p>
           <p class="small" id="eTarget">Pick a program or professor with “✉️ Draft email”, or write a general one.</p>
           <label>Type of email
             <select id="eKind">
@@ -106,11 +111,26 @@
           <label>When can you start?
             <input id="eWhen" value="this summer">
           </label>
+          <label id="eInstrWrap" hidden>Anything else for the AI? (optional)
+            <input id="eInstr" placeholder="e.g. mention I'm switching from biology to CS">
+          </label>
+          <div class="row" id="aiRow" hidden>
+            <button class="primary" id="aiWrite" type="button">✨ Write with AI</button>
+            <span class="small" id="aiStatus" role="status"></span>
+          </div>
           <p class="small">Your name, school, year, major, skills and a project come from <a href="#" id="eProfileLink">your profile</a>.</p>
         </div>
         <div class="card draft">
           <label>Subject <input id="eSubject"></label>
           <label>Email <textarea id="eBody" rows="16"></textarea></label>
+          <div class="row" id="tweakRow" hidden>
+            <span class="small">Adjust:</span>
+            <button class="ghost" type="button" data-tweak="shorter">Shorter</button>
+            <button class="ghost" type="button" data-tweak="warmer">Warmer</button>
+            <button class="ghost" type="button" data-tweak="formal">More formal</button>
+            <button class="ghost" type="button" data-tweak="confident">More confident</button>
+            <button class="ghost" type="button" data-tweak="new">↻ New version</button>
+          </div>
           <div class="row">
             <button class="primary" id="eCopy">Copy email</button>
             <a class="ghost btn" id="eMail" href="#">Open in my email app</a>
@@ -155,11 +175,12 @@
       <label>Skills <input name="skills" placeholder="e.g. Python, data analysis, lab safety training"></label>
       <label>One project or class you're proud of <input name="project" placeholder="e.g. Built a traffic forecasting app in Python"></label>
       <div class="two">
-        <label>US citizen or permanent resident?
-          <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No</option></select>
+        <label>Are you a US citizen or permanent resident?
+          <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No, I'm an international student</option></select>
         </label>
         <label>Preferred states <span class="small">(optional, e.g. NC, VA)</span> <input name="states" placeholder="NC, VA, SC"></label>
       </div>
+      <label class="check"><input type="checkbox" name="hbcu"> I attend an HBCU (show HBCU programs first)</label>
       <label class="check"><input type="checkbox" name="paid_only"> I'm only looking for paid opportunities</label>
       <div class="row end">
         <button class="ghost" value="cancel" formnovalidate>Close</button>
@@ -193,12 +214,13 @@
   <div id="toast" class="toast" role="status" hidden></div>
 
   <footer class="foot small">
-    <p>Data: <a href="https://www.nsf.gov/funding/initiatives/reu" target="_blank" rel="noopener">NSF</a> award data, <a href="https://www.usajobs.gov/" target="_blank" rel="noopener">USAJOBS</a>, and programs we check by hand. <span id="updated"></span> Always confirm details on the official page before applying.</p>
+    <p>Data: <a href="https://www.nsf.gov/funding/initiatives/reu" target="_blank" rel="noopener">NSF</a> award data, <a href="https://www.usajobs.gov/" target="_blank" rel="noopener">USAJOBS</a>, university and national programs we check by hand, and the <a href="https://sites.ed.gov/whhbcu/one-hundred-and-five-historically-black-colleges-and-universities/" target="_blank" rel="noopener">Department of Education HBCU list</a>. <span id="updated"></span> Always confirm details on the official page before applying.</p>
     <p>Research Compass is an independent student project. It is not affiliated with or endorsed by NSF, any agency, university or company listed. Names are used only to point you to official pages.
       Know a program we're missing? <a href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener">Submit a listing</a>.</p>
     <p>Built by Frank Ncube · <a href="https://github.com/Knarf24/research-compass" target="_blank" rel="noopener">Source</a> · <a href="https://knarf24.github.io/project-hub/" target="_blank" rel="noopener">More projects</a></p>
   </footer>
 
+  <script src="config.js"></script>
   <script src="pyodide/pyodide.js"></script>
   <script src="main.js"></script>
   <script>
