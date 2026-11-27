@@ -159,5 +159,24 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-12",
+    "kind": "submitted",
+    "title": "Cech Fellows Program (Summer Undergraduate Research)",
+    "org": "Howard Hughes Medical Institute (HHMI)",
+    "city": "Ashburn",
+    "state": "VA",
+    "fields": [],
+    "summary": "Paid nine-week summer program (June 14 to August 12, 2027) placing undergraduates in HHMI life-sciences labs across the US, including Janelia. Stipend is $15,000 at a host institution or $12,000 at Janelia with housing.",
+    "url": "https://www.hhmi.org/programs/cech-fellows",
+    "deadline": "2026-12-17",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Rising juniors or seniors, full-time at a US institution, 18+; no visa sponsorship",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
