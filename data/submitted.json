@@ -237,5 +237,26 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-16",
+    "kind": "submitted",
+    "title": "Computing Internships (Spring and Summer 2027)",
+    "org": "Lawrence Livermore National Laboratory (LLNL)",
+    "city": "Livermore",
+    "state": "CA",
+    "fields": [
+      "Computer science"
+    ],
+    "summary": "LLNL's list of computing internship postings, including undergraduate, community college, DevOps, HPC cluster engineering and Data Science Institute roles for 2027. Each posting has its own requirements and closing date.",
+    "url": "https://www.llnl.gov/join-our-team/careers/find-your-job/internship_computing",
+    "deadline": null,
+    "ends": null,
+    "paid": null,
+    "citizenship": "Varies by posting",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
