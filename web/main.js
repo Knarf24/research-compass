@@ -95,11 +95,13 @@ function setup() {
   const sources = INFO.sources || {};
   const reu = sources["NSF REU Sites"]?.count || 0;
   $("stats").replaceChildren(
-    stat(INFO.listings, "open opportunities"),
-    stat(INFO.professors, "professors with active NSF grants"),
-    stat(INFO.hbcu_listings, "HBCU programs and HBCU hosts"),
-    stat(INFO.intl_listings, "open to international students"),
+    stat(INFO.listings, "open programs"),
+    stat(INFO.professors, "funded professors"),
+    stat(INFO.hbcu_listings, "HBCU options"),
+    stat(INFO.intl_listings, "open to international"),
   );
+  // Filters start open on a computer and folded away on a phone, where they'd push the list off screen.
+  $("pFilters").open = !window.matchMedia("(max-width: 760px)").matches;
 
   $("dirs").replaceChildren(...INFO.directories.map((d) => el("div", { class: "dir" }, ext(d.url, d.name), el("span", { class: "small" }, d.what))));
 
@@ -108,6 +110,7 @@ function setup() {
 
   // programs
   for (const id of ["pField", "pState", "pKind", "pSort", "pEligible", "pHbcu", "pIntl"]) $(id).addEventListener("change", () => { pLimit = 30; renderPrograms(); });
+  $("pFilters").addEventListener("toggle", filterCount);
   $("pq").addEventListener("input", debounce(() => { pLimit = 30; renderPrograms(); }));
   $("pMore").addEventListener("click", () => { pLimit += 30; renderPrograms(); });
 
@@ -156,10 +159,16 @@ function showTab(name) {
   for (const b of $("tabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
   for (const s of document.querySelectorAll(".panel")) s.hidden = s.id !== "t-" + name;
   history.replaceState(null, "", "#" + name);
+  // Start each section at its top instead of halfway down the previous one.
+  const top = $("tabs").offsetTop;
+  if (window.scrollY > top) window.scrollTo(0, top);
 }
 
 function showMe() {
-  $("meLabel").textContent = profile.major ? `${profile.name || "You"} · ${profile.major} · ✏️ Edit` : "Set up your profile";
+  const first = (profile.name || "").trim().split(/\s+/)[0] || "Your profile";
+  $("meLabel").replaceChildren(...(profile.major
+    ? [el("b", {}, first), el("span", { class: "chip-major" }, " · " + profile.major), el("span", { class: "chip-edit" }, "Edit")]
+    : ["Set up your profile"]));
 }
 
 // ------------------------------------------------------------------ sharing
@@ -213,58 +222,76 @@ function renderPrograms() {
     hbcu: $("pHbcu").checked, intl: $("pIntl").checked,
   };
   const res = call("programs", { profile, filters });
-  $("pCount").textContent = res.total ? `${res.total.toLocaleString()} match${res.total === 1 ? "" : "es"}${profile.major ? ", ranked for you" : ". Set up your profile to rank them for you"}.` : "";
+  const sortName = { match: "best match first", deadline: "soonest deadline first", name: "A to Z" }[filters.sort];
+  $("pCount").replaceChildren(res.total
+    ? el("span", {}, el("b", {}, `${res.total.toLocaleString()} program${res.total === 1 ? "" : "s"}`),
+      profile.major ? ` · sorted ${sortName}` : " · set up your profile to see your match %")
+    : "");
+  filterCount();
   $("pList").replaceChildren(...(res.items.length ? res.items.map(programCard) : [empty("No programs match. Try fewer filters.")]));
   $("pMore").hidden = res.total <= res.items.length;
+}
+
+function filterCount() {
+  const n = ["pField", "pState", "pKind"].filter((id) => $(id).value).length
+    + ["pEligible", "pHbcu", "pIntl"].filter((id) => $(id).checked).length;
+  $("pFilterCount").textContent = n ? `(${n} on)` : "";
 }
 
 function empty(text) { return el("div", { class: "empty" }, text); }
 
 function scoreRing(score) {
   const cls = score >= 70 ? "hi" : score >= 45 ? "mid" : "lo";
-  return el("div", { class: "score " + cls, title: "How well it fits your profile (not your chance of being accepted). See \"How the match score works\"." }, el("b", {}, score), el("span", {}, "match"));
+  return el("div", { class: "score " + cls, title: "How well it fits your profile (not your chance of being accepted). See \"How the match % works\"." },
+    el("b", {}, `${score}%`), el("span", {}, "match"));
 }
+
+// Card top: what it is, its name and where on the left; the match % on the right.
+function cardHead(kind, title, where, score) {
+  return el("div", { class: "head" },
+    el("div", { class: "body" }, el("div", { class: "kind" }, kind), el("h3", {}, title), el("div", { class: "where" }, where)),
+    score == null ? null : scoreRing(score));
+}
+// A labelled fact ("Deadline", "Pay", …) so nothing on a card needs guessing.
+const fact = (label, value, cls = "") => value ? el("div", { class: "fact " + cls }, el("dt", {}, label), el("dd", {}, value)) : null;
 
 function programCard(r) {
   const isSaved = saved.some((s) => s.id === r.id);
   const where = [r.org, [r.city, r.state].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+  const soon = r.days_left != null && r.days_left <= 14;
   const deadline = r.deadline
-    ? el("span", { class: "pill " + (r.days_left != null && r.days_left <= 14 ? "warn" : "") }, `⏰ Deadline ${fmtDate(r.deadline)}${r.days_left != null ? ` (${r.days_left} days)` : ""}`)
-    : el("span", { class: "pill" }, "⏰ Deadline: see official page");
+    ? `${fmtDate(r.deadline)}${r.days_left != null ? ` (${r.days_left} day${r.days_left === 1 ? "" : "s"} left)` : ""}`
+    : "See official page";
+  const pay = r.paid ? (r.pay || "Paid") : r.paid === false ? "Unpaid" : "See official page";
+  const hbcu = r.hbcu_focus ? "🎓 For HBCU students" : r.hbcu_host ? "🎓 Hosted at an HBCU" : "";
   return el("article", { class: "card item" },
-    profile.major ? scoreRing(r.score) : null,
-    el("div", { class: "body" },
-      el("div", { class: "kind" }, KIND_LABEL[r.kind] || r.source),
-      el("h3", {}, r.title),
-      el("div", { class: "where" }, where),
-      el("p", { class: "summary" }, r.summary),
-      el("div", { class: "pills" },
-        deadline,
-        r.paid ? el("span", { class: "pill good" }, "💵 " + (r.pay || "Paid")) : null,
-        intlPill(r),
-        r.hbcu_focus ? el("span", { class: "pill hbcu" }, "🎓 For HBCU students") : r.hbcu_host ? el("span", { class: "pill hbcu" }, "🎓 Hosted at an HBCU") : null,
-        ...(r.fields || []).slice(0, 3).map((f) => el("span", { class: "pill soft" }, f)),
-      ),
-      r.reasons?.length ? el("div", { class: "why" }, "✓ " + r.reasons.join(" · ")) : null,
-      r.warnings?.length ? el("div", { class: "warnline" }, "⚠ " + r.warnings.join(" · ")) : null,
-      el("div", { class: "row" },
-        ext(r.url, r.kind === "reu" && !r.has_site_link ? "NSF award page ↗" : "Official page ↗", "primary btn"),
-        r.kind === "reu" && !r.has_site_link
-          ? ext(`https://www.google.com/search?q=${encodeURIComponent(`${r.org} REU ${r.title}`)}`, "Find the program site ↗", "ghost btn") : null,
-        el("button", { class: "ghost", onclick: () => toggleSave(r) }, isSaved ? "★ Saved" : "☆ Save to tracker"),
-        el("button", { class: "ghost", onclick: () => draftFor({ type: "program", ...r }) }, "✉️ Draft email"),
-        el("button", { class: "ghost", "aria-haspopup": "true", onclick: (e) => toggleShare(e.currentTarget, r) }, "↗ Share"),
-      ),
-      el("div", { class: "src small" }, `Source: ${r.source}${r.checked ? ", checked " + fmtDate(r.checked) : ""}`),
+    cardHead(KIND_LABEL[r.kind] || r.source, r.title, where, profile.major ? r.score : null),
+    el("p", { class: "summary" }, r.summary),
+    el("dl", { class: "facts" },
+      fact("Deadline", deadline, soon ? "warn" : ""),
+      fact("Pay", pay, r.paid ? "good" : ""),
+      fact("Who can apply", intlText(r), r.international === "yes" ? "good" : ""),
+      hbcu ? fact("HBCU", hbcu, "hbcu") : null,
+      (r.fields || []).length ? fact("Fields", r.fields.slice(0, 3).join(", ")) : null,
     ),
+    r.reasons?.length ? el("div", { class: "why" }, el("b", {}, "Why it fits: "), r.reasons.join(" · ")) : null,
+    r.warnings?.length ? el("div", { class: "warnline" }, el("b", {}, "Check: "), r.warnings.join(" · ")) : null,
+    el("div", { class: "row actions" },
+      ext(r.url, r.kind === "reu" && !r.has_site_link ? "NSF award page ↗" : "Official page ↗", "primary btn"),
+      r.kind === "reu" && !r.has_site_link
+        ? ext(`https://www.google.com/search?q=${encodeURIComponent(`${r.org} REU ${r.title}`)}`, "Find the program site ↗", "ghost btn") : null,
+      el("button", { class: "ghost", onclick: () => toggleSave(r) }, isSaved ? "★ Saved" : "☆ Save to tracker"),
+      el("button", { class: "ghost", onclick: () => draftFor({ type: "program", ...r }) }, "✉️ Draft email"),
+      el("button", { class: "ghost", "aria-haspopup": "true", onclick: (e) => toggleShare(e.currentTarget, r) }, "↗ Share"),
+    ),
+    el("div", { class: "src small" }, `Source: ${r.source}${r.checked ? ", checked " + fmtDate(r.checked) : ""}`),
   );
 }
 
-function intlPill(r) {
-  const note = r.international_note || r.citizenship || "";
-  if (r.international === "yes") return el("span", { class: "pill good", title: note }, "🌍 Open to international students");
-  if (r.international === "no") return el("span", { class: "pill", title: note }, "🇺🇸 US citizens / permanent residents");
-  return el("span", { class: "pill soft", title: note }, "🌍 International: check eligibility");
+function intlText(r) {
+  if (r.international === "yes") return "🌍 Open to international students";
+  if (r.international === "no") return "🇺🇸 US citizens / permanent residents";
+  return "🌍 International students: check the official page";
 }
 
 function toggleSave(r) {
@@ -302,17 +329,16 @@ function profCard(p) {
   const isSaved = saved.some((s) => s.id === id);
   const search = `https://www.google.com/search?q=${encodeURIComponent(`${p.name} ${p.school} faculty`)}`;
   return el("article", { class: "card item" },
-    scoreRing(p.score),
-    el("div", { class: "body" },
-      el("div", { class: "kind" }, "Researcher with an active NSF grant"),
-      el("h3", {}, p.name),
-      el("div", { class: "where" }, `${p.school} · ${[p.city, p.state].filter(Boolean).join(", ")} `, p.hbcu ? el("span", { class: "pill hbcu" }, "🎓 HBCU") : null),
+    cardHead("Researcher with an active NSF grant", p.name,
+      [`${p.school} · ${[p.city, p.state].filter(Boolean).join(", ")} `, p.hbcu ? el("span", { class: "pill hbcu" }, "🎓 HBCU") : null], p.score),
+    el("div", { class: "grants" },
+      el("div", { class: "label" }, p.grants.length > 1 ? `Funded projects (${p.grants.length})` : "Funded project"),
       ...p.grants.map((g) => el("div", { class: "grant" },
         ext(g.url, g.title), el("span", { class: "small" }, g.ends ? ` · funded through ${fmtDate(g.ends)}` : ""),
-        el("p", { class: "summary" }, g.summary))),
-      el("div", { class: "pills" }, ...(p.fields || []).slice(0, 4).map((f) => el("span", { class: "pill soft" }, f))),
-      p.reasons?.length ? el("div", { class: "why" }, "✓ " + p.reasons.join(" · ")) : null,
-      el("div", { class: "row" },
+        el("p", { class: "summary" }, g.summary)))),
+    el("dl", { class: "facts" }, (p.fields || []).length ? fact("Fields", p.fields.slice(0, 4).join(", ")) : null),
+    p.reasons?.length ? el("div", { class: "why" }, el("b", {}, "Why it fits: "), p.reasons.join(" · ")) : null,
+    el("div", { class: "row actions" },
         ext(search, "Find their faculty page ↗", "primary btn"),
         el("button", { class: "ghost", onclick: () => draftFor({ type: "professor", ...p }) }, "✉️ Draft email"),
         el("button", { class: "ghost", onclick: () => {
@@ -321,7 +347,6 @@ function profCard(p) {
           else saved.push({ id, title: `Research with ${p.name}`, org: p.school, url: p.grants[0]?.url || "", deadline: "", stage: "Interested", note: "" });
           saveTracker(); renderProfs(); toast(i >= 0 ? "Removed from your tracker." : "Saved. Find it in 📋 Tracker.");
         } }, isSaved ? "★ Saved" : "☆ Save to tracker"),
-      ),
     ),
   );
 }
@@ -454,7 +479,8 @@ function renderTracker() {
   const badge = $("dueBadge");
   badge.hidden = !t.due_soon;
   badge.textContent = t.due_soon;
-  $("tStages").replaceChildren(...t.stages.filter((s) => t.counts[s]).map((s) => el("span", { class: "pill soft" }, `${s}: ${t.counts[s]}`)));
+  const used = t.stages.filter((s) => t.counts[s]);
+  $("tStages").replaceChildren(...(used.length ? [el("span", { class: "label" }, "Progress"), ...used.map((s) => el("span", { class: "pill soft" }, `${s}: ${t.counts[s]}`))] : []));
   $("tList").replaceChildren(...(t.items.length ? t.items.map(trackRow) : [empty("Nothing saved yet. Tap “☆ Save to tracker” on any program or professor.")]));
 }
 
@@ -465,14 +491,26 @@ function trackRow(it) {
     if (s.stage === "Emailed" && !s.emailed_on) s.emailed_on = new Date().toISOString().slice(0, 10);
     saveTracker();
   } }, ...INFO_STAGES().map((s) => el("option", { value: s, selected: s === it.stage }, s)));
+  const left = it.days_left;
+  const due = !it.deadline ? null
+    : el("div", { class: "due" + (left != null && left >= 0 && left <= 14 ? " soon" : "") },
+      el("b", {}, left == null ? fmtDate(it.deadline) : left < 0 ? "Passed" : left === 0 ? "Today" : `${left} day${left === 1 ? "" : "s"}`),
+      el("span", {}, left != null && left > 0 ? "left to apply" : "deadline"));
   return el("article", { class: "card track" + (it.urgent ? " urgent" : "") + (it.closed ? " closed" : "") },
-    el("div", { class: "body" },
-      el("h3", {}, it.url ? ext(it.url, it.title) : it.title),
-      el("div", { class: "where" }, [it.org, it.deadline ? `Deadline ${fmtDate(it.deadline)}${it.days_left != null && it.days_left >= 0 ? ` (${it.days_left} days left)` : it.days_left < 0 ? " (passed)" : ""}` : ""].filter(Boolean).join(" · ")),
-      it.nudge ? el("div", { class: "warnline" }, "🔔 " + it.nudge) : null,
-      it.note ? el("p", { class: "small" }, it.note) : null,
-    ),
-    el("div", { class: "side" }, stageSel, el("button", { class: "ghost", onclick: () => openItem(it.id) }, "Edit")),
+    el("div", { class: "head" },
+      el("div", { class: "body" },
+        el("h3", {}, it.url ? ext(it.url, it.title) : it.title),
+        el("div", { class: "where" }, it.org || ""),
+      ),
+      due),
+    el("dl", { class: "facts" },
+      fact("Deadline", it.deadline ? fmtDate(it.deadline) : "None set"),
+      it.emailed_on ? fact("Emailed", fmtDate(it.emailed_on)) : null,
+      it.note ? fact("Note", it.note) : null),
+    it.nudge ? el("div", { class: "warnline" }, el("b", {}, "Reminder: "), it.nudge) : null,
+    el("div", { class: "row actions" },
+      el("label", { class: "stage" }, el("span", {}, "Stage"), stageSel),
+      el("button", { class: "ghost", onclick: () => openItem(it.id) }, "✏️ Edit")),
   );
 }
 const INFO_STAGES = () => ["Interested", "Emailed", "Applied", "Interview", "Offer", "Declined", "Not selected"];
@@ -483,7 +521,7 @@ function setupItemForm() {
   $("itemDlg").addEventListener("close", () => {
     const v = $("itemDlg").returnValue;
     const id = f.dataset.id;
-    if (v === "delete") { saved = saved.filter((s) => s.id !== id); saveTracker(); renderPrograms(); return; }
+    if (v === "delete") { saved = saved.filter((s) => s.id !== id); saveTracker(); renderPrograms(); renderProfs(); return; }
     if (v !== "save") return;
     const data = Object.fromEntries(new FormData(f).entries());
     const existing = saved.find((s) => s.id === id);

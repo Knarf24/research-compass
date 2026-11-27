@@ -19,7 +19,7 @@
         <p class="tag">Paid undergrad research across the US, matched to you.</p>
       </div>
     </div>
-    <button class="chip" id="meBtn" type="button" title="Edit your profile">👤 <span id="meLabel">Set up your profile</span></button>
+    <button class="chip" id="meBtn" type="button" title="Edit your profile"><span aria-hidden="true">👤</span> <span id="meLabel">Set up your profile</span></button>
   </header>
 
   <div id="loading" class="loading" role="status">
@@ -31,40 +31,56 @@
   </div>
 
   <nav class="tabs" id="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" data-tab="programs" aria-selected="true">🧭 Programs</button>
-    <button role="tab" data-tab="profs">🔬 Professors</button>
-    <button role="tab" data-tab="email">✉️ Email writer</button>
-    <button role="tab" data-tab="tracker">📋 Tracker <span class="badge" id="dueBadge" hidden></span></button>
+    <button role="tab" data-tab="programs" aria-selected="true"><span class="ti" aria-hidden="true">🧭</span><span>Programs</span></button>
+    <button role="tab" data-tab="profs"><span class="ti" aria-hidden="true">🔬</span><span>Professors</span></button>
+    <button role="tab" data-tab="email"><span class="ti" aria-hidden="true">✉️</span><span>Write email</span></button>
+    <button role="tab" data-tab="tracker"><span class="ti" aria-hidden="true">📋</span><span>Tracker</span><span class="badge" id="dueBadge" hidden></span></button>
   </nav>
 
   <main id="app" class="app" hidden>
     <!-- PROGRAMS -->
     <section id="t-programs" class="panel">
       <div id="pShared" class="shared-box" hidden></div>
+      <div class="intro">
+        <h2>Paid research programs</h2>
+        <p class="small">Summer programs, REU sites and student jobs that are open now. Each one shows its deadline, pay and who can apply, and how well it fits your profile.</p>
+      </div>
       <div class="stats" id="stats"></div>
-      <div class="filters">
-        <input id="pq" type="search" placeholder="Search programs, schools or topics…" aria-label="Search programs">
-        <select id="pField" aria-label="Field"><option value="">All fields</option></select>
-        <select id="pState" aria-label="State"><option value="">All states</option></select>
-        <select id="pKind" aria-label="Type">
+      <div class="card finder">
+        <label class="field search">Search
+          <input id="pq" type="search" placeholder="Program, school or topic…">
+        </label>
+        <details class="morefilters" id="pFilters">
+          <summary>Filters and sort <span class="small" id="pFilterCount"></span></summary>
+          <div class="fgrid">
+            <label class="field">Field<select id="pField"><option value="">All fields</option></select></label>
+            <label class="field">State<select id="pState"><option value="">All states</option></select></label>
+            <label class="field">Type<select id="pKind">
           <option value="">All types</option>
           <option value="university">University-run programs</option>
           <option value="reu">NSF REU summer sites</option>
           <option value="program">National programs</option>
           <option value="federal">Federal student jobs</option>
           <option value="submitted">Community submitted</option>
-        </select>
-        <select id="pSort" aria-label="Sort">
+        </select></label>
+            <label class="field">Sort by<select id="pSort">
           <option value="match">Best match</option>
           <option value="deadline">Soonest deadline</option>
           <option value="name">A to Z</option>
-        </select>
-        <label class="check"><input type="checkbox" id="pEligible"> Only ones I qualify for</label>
-        <label class="check"><input type="checkbox" id="pHbcu"> 🎓 HBCU programs</label>
-        <label class="check"><input type="checkbox" id="pIntl"> 🌍 Open to international students</label>
+        </select></label>
+          </div>
+          <div class="checks">
+            <label class="check"><input type="checkbox" id="pEligible"> Only ones I qualify for</label>
+            <label class="check"><input type="checkbox" id="pHbcu"> 🎓 HBCU programs</label>
+            <label class="check"><input type="checkbox" id="pIntl"> 🌍 Open to international students</label>
+          </div>
+        </details>
       </div>
-      <details class="block howscore">
-        <summary>How the match score works</summary>
+      <div class="listhead">
+        <p class="small" id="pCount"></p>
+      </div>
+      <details class="howscore">
+        <summary>How the match % works</summary>
         <p class="small">The score shows how well a program fits your profile. It is <b>not</b> your chance of being accepted, and no AI guesses it: it follows fixed rules you can check, and the reasons and warnings under each program show exactly what counted.</p>
         <ul class="small">
           <li><b>Field (up to 35):</b> the program covers your major (35) or another field you picked (25).</li>
@@ -75,7 +91,6 @@
           <li><b>Limits:</b> if you don't meet a stated requirement (class year, citizenship or a GPA minimum) the score is capped at 40 and it's hidden by "Only ones I qualify for". If we can't confirm one (no GPA in your profile, international eligibility unclear) it's capped at 90. So 100 means everything we can check lines up.</li>
         </ul>
       </details>
-      <p class="small" id="pCount"></p>
       <div class="list" id="pList"></div>
       <button class="ghost wide" id="pMore" hidden>Show more</button>
 
@@ -107,14 +122,18 @@
         <h2>Find a professor to work with</h2>
         <p class="small">Researchers at US universities with an <b>active NSF grant</b>, so they have funded work going on now. Matched on the words in their grant summaries. We never collect emails: use “Find their faculty page” to reach them through their university.</p>
       </div>
-      <div class="filters">
-        <input id="rq" type="search" placeholder="What do you want to work on? e.g. “drones for farming”, “cancer imaging”" aria-label="Research interest">
-        <select id="rField" aria-label="Field"><option value="">All fields</option></select>
-        <select id="rState" aria-label="State"><option value="">All states</option></select>
-        <input id="rSchool" type="search" placeholder="University (optional)" aria-label="University">
-        <label class="check"><input type="checkbox" id="rHbcu"> 🎓 Only at HBCUs</label>
+      <div class="card finder">
+        <label class="field search">What do you want to work on?
+          <input id="rq" type="search" placeholder="e.g. “drones for farming”, “cancer imaging”">
+        </label>
+        <div class="fgrid">
+          <label class="field">Field<select id="rField"><option value="">All fields</option></select></label>
+          <label class="field">State<select id="rState"><option value="">All states</option></select></label>
+          <label class="field">University<input id="rSchool" type="search" placeholder="Optional"></label>
+        </div>
+        <div class="checks"><label class="check"><input type="checkbox" id="rHbcu"> 🎓 Only at HBCUs</label></div>
       </div>
-      <p class="small" id="rCount"></p>
+      <div class="listhead"><p class="small" id="rCount"></p></div>
       <div class="list" id="rList"></div>
     </section>
 
@@ -171,14 +190,15 @@
 
     <!-- TRACKER -->
     <section id="t-tracker" class="panel" hidden>
-      <div class="block-head">
+      <div class="intro">
         <h2>Your applications</h2>
-        <div class="row">
-          <button class="ghost" id="tAdd">+ Add your own</button>
-          <button class="ghost" id="tIcs">📅 Add deadlines to my calendar</button>
-          <button class="ghost" id="tExport">Back up</button>
-          <label class="ghost btn">Restore <input type="file" id="tImport" accept="application/json" hidden></label>
-        </div>
+        <p class="small">Everything you saved, with its deadline and where you are with it. Change the stage as you go.</p>
+      </div>
+      <div class="toolbar">
+        <button class="primary" id="tAdd">+ Add your own</button>
+        <button class="ghost" id="tIcs" title="Download a calendar file with every deadline and a reminder 7 days before">📅 Add to calendar</button>
+        <button class="ghost" id="tExport" title="Save a backup file of your tracker">💾 Back up</button>
+        <label class="ghost btn" title="Load a backup file">📂 Restore <input type="file" id="tImport" accept="application/json" hidden></label>
       </div>
       <div class="stages" id="tStages"></div>
       <div class="list" id="tList"></div>
