@@ -341,5 +341,26 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-21",
+    "kind": "submitted",
+    "title": "SIParCS Undergraduate Student Internships 2027",
+    "org": "NSF National Center for Atmospheric Research (NCAR), Computational and Information Systems Lab",
+    "city": "",
+    "state": "",
+    "fields": [
+      "Computer science"
+    ],
+    "summary": "Summer internship (June to August 2027) working with NCAR's computing lab on high-performance computing and scientific software and data tools. Paid at $23.41 an hour.",
+    "url": "https://ucar.wd5.myworkdayjobs.com/en-US/UCAR_Careers/details/XMLNAME-2027-SIParCS-Undergraduate-Student-Internships_REQ-2026-231-1",
+    "deadline": "2027-01-19",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Undergraduates who have completed sophomore year, and graduate students; no visa sponsorship",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
