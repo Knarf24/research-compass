@@ -12,3 +12,10 @@ jobs:
             -d '{"profile":{"name":"Sample Student","school":"a North Carolina college","year":"Sophomore","major":"Computer science","interests":"machine learning for health","skills":"Python","project":"Built a traffic forecasting app in Python"},"target":{"type":"program","title":"Summer Undergraduate Research Fellowship","org":"NIST","summary":"Paid summer research at NIST labs in measurement science."},"kind":"intro","why":"I want to use data to solve real problems."}' \
             -w "\nHTTP %{http_code}\n" | tee out.txt
           grep -q "HTTP 200" out.txt
+      - name: Read a sample résumé
+        run: |
+          curl -sS -m 90 -X POST https://research-compass-ai-proxy.vercel.app/api/draft \
+            -H "Origin: https://knarf24.github.io" -H "Content-Type: application/json" \
+            -d '{"mode":"resume","today":"2026-11-27","years":["Community college","Freshman","Sophomore","Junior","Senior","Graduate"],"fields":["Computer science","AI and machine learning","Biology"],"text":"SAMPLE STUDENT\nEDUCATION\nNorth Carolina A&T State University\nBachelor of Science in Computer Science, Expected May 2028\nPROJECTS\nTrafficFlow: Built a traffic forecasting app in Python with scikit-learn\nSKILLS\nPython, SQL, Git, Pandas"}' \
+            -w "\nHTTP %{http_code}\n" | tee resume.txt
+          grep -q "HTTP 200" resume.txt
