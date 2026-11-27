@@ -78,5 +78,26 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-8",
+    "kind": "submitted",
+    "title": "Computer Science Research Internship Program",
+    "org": "Yale University, Department of Computer Science",
+    "city": "New Haven",
+    "state": "CT",
+    "fields": [
+      "Computer science"
+    ],
+    "summary": "Yale CS matches students with faculty for research internships; location, dates and stipend depend on the project, and many projects can be remote. Applications are reviewed as they arrive, with December 15 suggested for summer projects.",
+    "url": "https://engineering.yale.edu/academic-study/departments/computer-science/undergraduate-study/research-internship-program",
+    "deadline": null,
+    "ends": null,
+    "paid": null,
+    "citizenship": "Students pursuing a bachelor's, master's or PhD in computer science or a related field",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
