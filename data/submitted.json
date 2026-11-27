@@ -199,5 +199,24 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-14",
+    "kind": "submitted",
+    "title": "Broad Summer Research Program (BSRP) 2027",
+    "org": "Broad Institute of MIT and Harvard",
+    "city": "Cambridge",
+    "state": "MA",
+    "fields": [],
+    "summary": "Fully funded nine-week program (June 7 to August 6, 2027) where undergraduates do a computational or experimental biomedical research project with a mentor. Includes leadership and science-communication sessions and a final presentation; stipend $5,400.",
+    "url": "https://www.broadinstitute.org/bsrp/broad-summer-research-program-bsrp",
+    "deadline": "2027-01-10",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Science, CS, engineering or math majors at US four-year colleges, GPA 3.2+, graduating Dec 2027 or later",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
