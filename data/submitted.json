@@ -140,5 +140,24 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-11",
+    "kind": "submitted",
+    "title": "Research Intern, Summer 2027",
+    "org": "Category Labs (the team behind Monad)",
+    "city": "New York",
+    "state": "NY",
+    "fields": [],
+    "summary": "About 12 weeks of research (between May 17 and August 30) in mechanism design, cryptoeconomics, distributed systems or cryptography, contributing to papers and prototypes. Pays $4,500 a week plus a housing stipend; hybrid, New York preferred.",
+    "url": "https://jobs.ashbyhq.com/category-labs/248a6400-c18e-4627-9c8c-1b1054869075/application",
+    "deadline": "2026-12-07",
+    "ends": null,
+    "paid": true,
+    "citizenship": "Mainly PhD students; exceptional master's and undergraduate students are also considered",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
