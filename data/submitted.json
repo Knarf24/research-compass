@@ -218,5 +218,24 @@
     "checked": "2026-11-27",
     "international": "check",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-15",
+    "kind": "submitted",
+    "title": "Undergraduate Complexity Research (UCR) 2027",
+    "org": "Santa Fe Institute",
+    "city": "Santa Fe",
+    "state": "NM",
+    "fields": [],
+    "summary": "Ten-week summer research program in complexity science (May 30 to August 7, 2027). Participants must attend all ten weeks.",
+    "url": "https://apply-sfi.smapply.org/prog/ucr2027/",
+    "deadline": "2027-01-13",
+    "ends": null,
+    "paid": null,
+    "citizenship": "Students in a bachelor's or associate's program graduating December 2027 or later",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "check",
+    "hbcu_focus": false
   }
 ]
