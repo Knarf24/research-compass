@@ -176,7 +176,7 @@ function empty(text) { return el("div", { class: "empty" }, text); }
 
 function scoreRing(score) {
   const cls = score >= 70 ? "hi" : score >= 45 ? "mid" : "lo";
-  return el("div", { class: "score " + cls, title: "How well it fits your profile" }, el("b", {}, score), el("span", {}, "match"));
+  return el("div", { class: "score " + cls, title: "How well it fits your profile (not your chance of being accepted). See \"How the match score works\"." }, el("b", {}, score), el("span", {}, "match"));
 }
 
 function programCard(r) {
@@ -463,7 +463,7 @@ function setupProfileForm() {
 }
 function openProfile() {
   const f = $("profileForm");
-  for (const k of ["name", "school", "year", "major", "interests", "skills", "project", "citizen"]) f[k].value = profile[k] || "";
+  for (const k of ["name", "school", "year", "major", "gpa", "interests", "skills", "project", "citizen"]) f[k].value = profile[k] || "";
   f.states.value = (profile.states || []).join(", ");
   f.paid_only.checked = !!profile.paid_only;
   f.hbcu.checked = !!profile.hbcu;
@@ -481,7 +481,7 @@ function openProfile() {
 // The file is read here in the browser. Python (compass.resume) suggests fields; if the AI
 // writer is set up and the student allows it, Gemini reads the text too (after emails, phone
 // numbers and links are removed). Only empty fields are filled, and the student reviews them.
-const RESUME_KEYS = { name: "name", school: "college", year: "year", major: "major", skills: "skills", interests: "interests", project: "project" };
+const RESUME_KEYS = { name: "name", school: "college", year: "year", major: "major", gpa: "GPA", skills: "skills", interests: "interests", project: "project" };
 
 function setupClearData() {
   const btn = $("pfClear");

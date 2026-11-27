@@ -364,5 +364,49 @@ class ResumeAndSubmissionTests(unittest.TestCase):
         self.assertIn("Robotics", item["fields"])
 
 
+class MatchScoreTests(unittest.TestCase):
+    def setUp(self):
+        self.r = {"title": "SURF Engineering", "summary": "Summer lab research for students interested in an engineering PhD. GPA 3.0 or higher.",
+                  "fields": ["Computer science"], "years": ["Sophomore", "Junior"], "international": "yes", "paid": True,
+                  "deadline": "2027-02-01", "state": "CA"}
+        self.r["_text"] = (self.r["title"] + " " + self.r["summary"] + " computer science").lower()
+        self.today = compass.dt.date(2026, 11, 27)
+
+    def score(self, **profile):
+        base = {"major": "Computer science", "year": "Junior", "citizen": "no", "interests": "engineering"}
+        base.update(profile)
+        return compass._score_listing(self.r, base, self.today)
+
+    def test_unknown_gpa_caps_below_100(self):
+        s, reasons, warnings, blocked = self.score()
+        self.assertLessEqual(s, 90)
+        self.assertFalse(blocked)
+        self.assertTrue(any("GPA of 3.0" in w for w in warnings))
+        self.assertTrue(any("PhD" in w for w in warnings))
+
+    def test_meeting_everything_can_reach_100(self):
+        s, reasons, warnings, blocked = self.score(gpa="3.4", interests="engineering, lab research")
+        self.assertEqual(s, 100)
+        self.assertIn("Meets the 3.0 GPA minimum", reasons)
+
+    def test_unmet_requirements_cap_at_40_and_block(self):
+        for prof in ({"gpa": "2.5"}, {"gpa": "3.4", "year": "Senior"}):
+            s, _, warnings, blocked = self.score(**prof)
+            self.assertLessEqual(s, 40)
+            self.assertTrue(blocked)
+        self.r["international"] = "no"
+        s, _, warnings, blocked = self.score(gpa="3.4")
+        self.assertTrue(blocked)
+        self.assertIn("Requires US citizenship or permanent residency", warnings)
+
+    def test_interest_phrases(self):
+        _, reasons, _, _ = self.score(interests="machine learning, engineering", gpa="3.4")
+        self.assertIn("Mentions engineering", reasons)
+        self.assertFalse(any("machine" in r for r in reasons))
+
+    def test_resume_reads_gpa(self):
+        self.assertEqual(compass.resume({"text": RESUME + "\nGPA: 3.62/4.0", "today": "2026-11-27"})["gpa"], "3.62")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

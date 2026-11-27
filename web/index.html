@@ -62,6 +62,18 @@
         <label class="check"><input type="checkbox" id="pHbcu"> 🎓 HBCU programs</label>
         <label class="check"><input type="checkbox" id="pIntl"> 🌍 Open to international students</label>
       </div>
+      <details class="block howscore">
+        <summary>How the match score works</summary>
+        <p class="small">The score shows how well a program fits your profile. It is <b>not</b> your chance of being accepted, and no AI guesses it: it follows fixed rules you can check, and the reasons and warnings under each program show exactly what counted.</p>
+        <ul class="small">
+          <li><b>Field (up to 35):</b> the program covers your major (35) or another field you picked (25).</li>
+          <li><b>Interests (up to 20):</b> your research interests appear in the program's description.</li>
+          <li><b>Class year (15):</b> your year is listed as eligible (8 if the program doesn't say).</li>
+          <li><b>Eligibility (15):</b> confirmed open to you (7 if it needs checking, for example for international students).</li>
+          <li><b>Paid, deadline more than two weeks away, location (5 each).</b> Programs for HBCU students get a bonus if you attend one.</li>
+          <li><b>Limits:</b> if you don't meet a stated requirement (class year, citizenship or a GPA minimum) the score is capped at 40 and it's hidden by "Only ones I qualify for". If we can't confirm one (no GPA in your profile, international eligibility unclear) it's capped at 90. So 100 means everything we can check lines up.</li>
+        </ul>
+      </details>
       <p class="small" id="pCount"></p>
       <div class="list" id="pList"></div>
       <button class="ghost wide" id="pMore" hidden>Show more</button>
@@ -192,6 +204,7 @@
           <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No, I'm an international student</option></select>
         </label>
         <label>Preferred states <span class="small">(optional, e.g. NC, VA)</span> <input name="states" placeholder="NC, VA, SC"></label>
+        <label>GPA <span class="small">(optional, out of 4.0; used to check GPA minimums)</span> <input name="gpa" type="number" min="0" max="4" step="0.01" inputmode="decimal" placeholder="e.g. 3.4"></label>
       </div>
       <label class="check"><input type="checkbox" name="hbcu"> I attend an HBCU (show HBCU programs first)</label>
       <label class="check"><input type="checkbox" name="paid_only"> I'm only looking for paid opportunities</label>

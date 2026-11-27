@@ -123,72 +123,127 @@ def load(args: dict) -> dict:
 
 
 # ---------------------------------------------------------------- programs
-def _score_listing(r: dict, profile: dict, today: dt.date) -> tuple[int, list[str], list[str]]:
-    """Return (score 0-100, reasons it fits, warnings)."""
+_GPA = re.compile(r"gpa[^0-9.;]{0,25}([1-4]\.\d{1,2})|([1-4]\.\d{1,2})\s*(?:/\s*4\.0\s*)?(?:or (?:higher|above|better)\s*)?(?:cumulative\s*|overall\s*)?gpa", re.I)
+_PHD = re.compile(r"\b(interested in|considering|planning|pursue|pursuing|preparation for|path to)\b[^.]{0,40}\b(ph\.?d|doctoral|graduate school|graduate study)", re.I)
+
+
+def _min_gpa(r: dict) -> float | None:
+    if r.get("min_gpa"):
+        return float(r["min_gpa"])
+    m = _GPA.search(r.get("summary") or "")
+    if m:
+        v = float(m.group(1) or m.group(2))
+        if 2.0 <= v <= 4.0:
+            return v
+    return None
+
+
+def _gpa(profile: dict) -> float | None:
+    try:
+        v = float(str(profile.get("gpa") or "").strip())
+        return v if 0 < v <= 4.0 else None
+    except ValueError:
+        return None
+
+
+def _score_listing(r: dict, profile: dict, today: dt.date) -> tuple[int, list[str], list[str], bool]:
+    """Return (score 0-100, reasons it fits, warnings, blocked).
+
+    A rule-based fit score, not a prediction of being accepted. Points (100 at most):
+      field 35 (your major) or 25 (a field you'd consider) · your interest words 0-20 ·
+      class year 15 (listed and matches; 8 when the program doesn't say) · eligibility 15 (confirmed;
+      7 when it needs checking) · paid 5 · deadline more than two weeks away 5 · location 5.
+    Then caps: a requirement you don't meet (class year, citizenship, GPA) caps it at 40 and marks it
+    "blocked"; a requirement we can't confirm (GPA not given, international eligibility unclear)
+    caps it at 90, so 100 only means everything we can check lines up.
+    """
     reasons, warnings = [], []
     score = 0.0
+    cap = 100
+    blocked = False
     mine = _profile_fields(profile)
     fields = r.get("fields", [])
     hit = [f for f in mine if f in fields]
-    if mine:
-        if profile.get("major") in fields:
-            score += 45
-            reasons.append(f"Matches your major ({profile['major']})")
-        elif hit:
-            score += 32
-            reasons.append(f"Matches your interest in {hit[0]}")
-        elif not fields:
-            score += 12
-    else:
+    if profile.get("major") and profile.get("major") in fields:
+        score += 35
+        reasons.append(f"Matches your major ({profile['major']})")
+    elif hit:
         score += 25
+        reasons.append(f"Matches your interest in {hit[0]}")
+    elif not fields or not mine:
+        score += 10
 
-    words = _words(profile.get("interests", ""))
-    if words:
-        found = sorted({w for w in words if _stem(w) in r["_text"]})
-        if found:
-            score += min(15, 5 * len(found))
-            reasons.append("Mentions " + ", ".join(found[:3]))
+    # Interests count as phrases ("machine learning" is one interest, not two words).
+    phrases = [ph.strip() for ph in re.split(r",|;|/|\band\b", (profile.get("interests") or "").lower()) if _words(ph)]
+    found = [ph for ph in phrases if all(_stem(w) in r["_text"] for w in _words(ph))]
+    if found:
+        score += min(20, 10 * len(found))
+        reasons.append("Mentions " + ", ".join(found[:3]))
 
     year = profile.get("year")
     years = r.get("years") or []
     if year and years:
         if year in years:
             score += 15
+            reasons.append(f"Open to {year.lower()}s" if year != "Community college" else "Open to community college students")
         else:
-            score -= 25
+            cap, blocked = min(cap, 40), True
             warnings.append(f"Usually for {', '.join(years)} students")
     else:
         score += 8
 
+    intl = r.get("international") or ("no" if CITIZEN_ONLY.search(r.get("citizenship") or "") else "check")
+    citizen = profile.get("citizen")
+    if citizen == "no":
+        if intl == "yes":
+            score += 15
+            reasons.append("Open to international students")
+        elif intl == "no":
+            cap, blocked = min(cap, 40), True
+            warnings.append("Requires US citizenship or permanent residency")
+        else:
+            score += 7
+            cap = min(cap, 90)
+            warnings.append("Check whether international students can apply")
+    elif citizen == "yes":
+        score += 15
+    else:
+        score += 7
+        if intl == "no":
+            warnings.append("US citizens and permanent residents only")
+
+    need = _min_gpa(r)
+    mine_gpa = _gpa(profile)
+    if need:
+        if mine_gpa is None:
+            cap = min(cap, 90)
+            warnings.append(f"Needs a GPA of {need:.1f} or higher (add your GPA to your profile to check)")
+        elif mine_gpa + 1e-9 >= need:
+            reasons.append(f"Meets the {need:.1f} GPA minimum")
+        else:
+            cap, blocked = min(cap, 40), True
+            warnings.append(f"Needs a GPA of {need:.1f} or higher; yours is {mine_gpa:.2f}")
+
+    if _PHD.search(r.get("summary") or ""):
+        warnings.append("Meant for undergraduates thinking about a PhD or graduate school")
+
     if r.get("paid"):
-        score += 8
+        score += 5
         if profile.get("paid_only"):
             reasons.append("Paid")
 
-    intl = r.get("international") or ("no" if CITIZEN_ONLY.search(r.get("citizenship") or "") else "check")
-    if profile.get("citizen") == "no":
-        if intl == "yes":
-            score += 22
-            reasons.append("Open to international students")
-        elif intl == "no":
-            score -= 45
-            warnings.append("Requires US citizenship or permanent residency")
-        else:
-            warnings.append("Check whether international students can apply")
-
     hbcu = r.get("hbcu_focus") or r.get("hbcu_host")
     if hbcu and profile.get("hbcu"):
-        score += 18
+        score += 10
         reasons.append("Made for HBCU students" if r.get("hbcu_focus") else "Hosted at an HBCU")
 
     st = r.get("state")
     pref = profile.get("states") or []
-    if pref and st:
-        if st in pref:
-            score += 12
-            reasons.append(f"In {st}, a state you picked")
-    elif not st:
-        score += 4
+    if not pref or not st:
+        score += 5
+    elif st in pref:
+        score += 5
+        reasons.append(f"In {st}, a state you picked")
 
     left = _days_left(r.get("deadline"), today)
     if left is not None:
@@ -196,7 +251,9 @@ def _score_listing(r: dict, profile: dict, today: dt.date) -> tuple[int, list[st
             warnings.append(f"Deadline in {left} day{'s' if left != 1 else ''}")
         elif left > 14:
             score += 5
-    return max(0, min(100, round(score))), reasons, warnings
+    else:
+        score += 3
+    return max(0, min(cap, 100, round(score))), reasons, warnings, blocked
 
 
 def programs(args: dict) -> dict:
@@ -221,8 +278,8 @@ def programs(args: dict) -> dict:
             continue
         if q_terms and not all(t in r["_text"] or t in (r.get("state") or "").lower() for t in q_terms):
             continue
-        score, reasons, warnings = _score_listing(r, profile, today)
-        if f.get("eligible") and any(w.startswith(("Requires", "Usually")) for w in warnings):
+        score, reasons, warnings, blocked = _score_listing(r, profile, today)
+        if f.get("eligible") and blocked:
             continue
         item = {k: v for k, v in r.items() if not k.startswith("_")}
         item.update(score=score, reasons=reasons, warnings=warnings, days_left=_days_left(r.get("deadline"), today))
@@ -605,7 +662,7 @@ def resume(args: dict) -> dict:
     lines = [re.sub(r"\s+", " ", ln).strip() for ln in text.splitlines()]
     lines = [ln for ln in lines if ln]
     sec = _sections(lines)
-    out = {"name": "", "school": "", "year": "", "major": "", "skills": "", "interests": "", "project": ""}
+    out = {"name": "", "school": "", "year": "", "major": "", "gpa": "", "skills": "", "interests": "", "project": ""}
 
     for ln in sec.get("top", [])[:6] or lines[:3]:
         words = ln.replace(",", " ").split()
@@ -619,6 +676,9 @@ def resume(args: dict) -> dict:
         out["school"] = re.sub(r"\s+", " ", m.group(0)).strip(" -–—()")[:120]
     out["year"] = _class_year(edu, _today(args))
     out["major"] = _major(edu, allowed)
+    g = re.search(r"\bgpa\b[^0-9]{0,15}([0-4]\.\d{1,2})(?:\s*/\s*4(?:\.0+)?)?", text, re.I)
+    if g and 0 < float(g.group(1)) <= 4.0:
+        out["gpa"] = g.group(1)
 
     skills: list[str] = []
     for ln in sec.get("skills", []):
