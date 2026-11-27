@@ -1,0 +1,63 @@
+name: Check and publish submissions
+# 1. A new or edited "[Listing]" issue gets automatic checks posted as a comment.
+# 2. When the repository owner adds the "approved" label, the listing is added to data/submitted.json,
+#    the issue is closed and the site is rebuilt.
+# The issue text is untrusted: it is only read by scripts/submissions.py from the event file, never put in a command.
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: submission-${{ github.event.issue.number }}
+
+jobs:
+  check:
+    if: startsWith(github.event.issue.title, '[Listing]') && github.event.action != 'labeled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Make sure the labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create listing --color 1D76DB --description "A submitted research opportunity" 2>/dev/null || true
+          gh label create approved --color 0E8A16 --description "Checked by a person; publish it" 2>/dev/null || true
+      - name: Run the automatic checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/submissions.py check
+
+  publish:
+    if: >-
+      startsWith(github.event.issue.title, '[Listing]') && github.event.action == 'labeled' &&
+      github.event.label.name == 'approved' && github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Add the listing
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/submissions.py publish
+      - name: Save, close the issue and rebuild the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/submitted.json
+          git commit -m "Publish submitted listing #$NUMBER"
+          for i in 1 2 3; do git pull --rebase origin main && git push origin HEAD:main && break; sleep 5; done
+          gh issue close "$NUMBER" --comment "Published. It will show on Research Compass in a few minutes. Thank you!"
+          gh workflow run update-and-deploy.yml --ref main

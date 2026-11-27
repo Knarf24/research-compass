@@ -152,3 +152,17 @@ details summary { cursor: pointer; font-weight: 600; }
   .filters select { flex: 1 1 45%; }
 }
 .pill.hbcu { border-color: rgba(245, 185, 66, .6); color: var(--gold); }
+.req { color: var(--gold); }
+.resume { margin: 12px 0 4px; padding: 12px; border: 1px dashed var(--line); border-radius: var(--radius); background: var(--card); }
+.resume .small { margin: 8px 0 0; }
+.resume label.check { margin-top: 8px; align-items: flex-start; }
+.resume label.check input { margin-top: 3px; flex: none; }
+.filled { outline: 2px solid var(--gold); outline-offset: 1px; }
+.modal input:invalid:focus, .modal select:invalid:focus { outline-color: var(--warn); }
+.submit { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.submit > div { flex: 1 1 320px; }
+.submit p { margin: 4px 0 0; }
+.busy { opacity: .6; pointer-events: none; }
+.modal .resume label.btn { display: inline-flex; margin-top: 0; color: var(--ink); cursor: pointer; }
+.modal .resume label.check { display: flex; gap: 8px; }
+.modal .resume label.check > input { display: inline-block; width: auto; margin: 3px 0 0; }

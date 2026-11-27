@@ -444,6 +444,7 @@ function setupProfileForm() {
   f.year.options[0].textContent = "Choose…";
   fillSelect(f.major, ["", ...INFO.fields], false);
   f.major.options[0].textContent = "Choose…";
+  setupResume();
   $("profile").addEventListener("close", () => {
     if ($("profile").returnValue !== "save") return;
     const data = Object.fromEntries(new FormData(f).entries());
@@ -470,8 +471,150 @@ function openProfile() {
     type: "button", class: "pill toggle", "data-v": v, "aria-pressed": String(chosen.has(v)),
     onclick: (e) => e.currentTarget.setAttribute("aria-pressed", String(e.currentTarget.getAttribute("aria-pressed") !== "true")),
   }, v)));
+  for (const node of f.querySelectorAll(".filled")) node.classList.remove("filled");
   $("profile").returnValue = "";
   $("profile").showModal();
+}
+
+// ------------------------------------------------------------------ résumé → profile
+// The file is read here in the browser. Python (compass.resume) suggests fields; if the AI
+// writer is set up and the student allows it, Gemini reads the text too (after emails, phone
+// numbers and links are removed). Only empty fields are filled, and the student reviews them.
+const RESUME_KEYS = { name: "name", school: "college", year: "year", major: "major", skills: "skills", interests: "interests", project: "project" };
+
+function setupResume() {
+  if (AI_URL) $("pfResumeAiWrap").hidden = false;
+  $("pfResume").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (file) await fillFromResume(file);
+  });
+  $("profileForm").addEventListener("input", (e) => e.target.classList.remove("filled"));
+}
+
+async function fillFromResume(file) {
+  const status = $("pfResumeStatus");
+  const btn = $("pfResumeBtn");
+  if (file.size > 8 * 1024 * 1024) { status.textContent = "That file is too big (over 8 MB). Try a smaller PDF or a Word file."; return; }
+  btn.classList.add("busy");
+  status.textContent = "📄 Reading your résumé…";
+  try {
+    const text = (await resumeText(file)).trim();
+    if (text.length < 40) {
+      status.textContent = "We couldn't find any text in that file. If it's a scanned image, try a Word (.docx) or text version.";
+      return;
+    }
+    let found = call("resume", { text, fields: INFO.fields });
+    let usedAi = false;
+    if (AI_URL && $("pfResumeAi").checked) {
+      status.textContent = "✨ The AI is reading your résumé…";
+      try {
+        const res = await fetch(AI_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "resume", text: scrubPersonal(text).slice(0, 12000), years: INFO.years, fields: INFO.fields, today: new Date().toISOString().slice(0, 10) }),
+        });
+        const ai = await res.json().catch(() => ({}));
+        if (res.ok) {
+          found = Object.fromEntries(Object.keys(RESUME_KEYS).map((k) => [k, (ai[k] || "").trim() || found[k] || ""]));
+          usedAi = true;
+        }
+      } catch { /* keep the on-device result */ }
+    }
+    const f = $("profileForm");
+    const filled = [];
+    for (const [key, label] of Object.entries(RESUME_KEYS)) {
+      const input = f[key];
+      const value = (found[key] || "").trim();
+      if (!value || (input.value || "").trim()) continue;
+      if (input.tagName === "SELECT" && ![...input.options].some((o) => o.value === value)) continue;
+      input.value = value;
+      input.classList.add("filled");
+      filled.push(label);
+    }
+    status.textContent = filled.length
+      ? `Filled in ${filled.join(", ")}${usedAi ? " (read with AI)" : ""}. The highlighted fields came from your résumé: check them, change anything you like, then save.`
+      : "Your résumé didn't add anything new: the fields it covers are already filled in. You can still edit them.";
+  } catch (err) {
+    status.textContent = err.message || "We couldn't read that file. Try a PDF, Word (.docx) or text file.";
+  } finally {
+    btn.classList.remove("busy");
+  }
+}
+
+function scrubPersonal(text) {
+  return text
+    .replace(/\S+@\S+/g, " ")
+    .replace(/(https?:\/\/|www\.)\S+/gi, " ")
+    .replace(/\b(linkedin|github)\.com\/\S*/gi, " ")
+    .replace(/\+?\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}/g, " ");
+}
+
+async function resumeText(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf") || file.type === "application/pdf") return pdfText(file);
+  if (name.endsWith(".docx")) return docxText(file);
+  if (name.endsWith(".doc")) throw new Error("Old Word files (.doc) can't be read. In Word, choose Save As → .docx or PDF, then try again.");
+  return file.text();
+}
+
+async function pdfText(file) {
+  const pdfjs = await import(new URL("vendor/pdfjs/pdf.min.mjs", location.href).href);
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL("vendor/pdfjs/pdf.worker.min.mjs", location.href).href;
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  const lines = [];
+  for (let i = 1; i <= Math.min(doc.numPages, 5); i++) {
+    const content = await (await doc.getPage(i)).getTextContent();
+    let line = "";
+    let lastY = null;
+    for (const item of content.items) {
+      const y = item.transform ? Math.round(item.transform[5]) : lastY;
+      if (lastY !== null && y !== null && Math.abs(y - lastY) > 2 && line.trim()) { lines.push(line); line = ""; }
+      line += item.str;
+      if (item.hasEOL) { lines.push(line); line = ""; }
+      lastY = y;
+    }
+    if (line.trim()) lines.push(line);
+  }
+  return lines.join("\n");
+}
+
+// A .docx is a zip file; the text is in word/document.xml.
+async function docxText(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const view = new DataView(buf.buffer);
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 66000); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("That Word file looks damaged. Try saving it again or use a PDF.");
+  const count = view.getUint16(eocd + 10, true);
+  let p = view.getUint32(eocd + 16, true);
+  for (let n = 0; n < count && p + 46 <= buf.length; n++) {
+    if (view.getUint32(p, true) !== 0x02014b50) break;
+    const method = view.getUint16(p + 10, true);
+    const size = view.getUint32(p + 20, true);
+    const nameLen = view.getUint16(p + 28, true);
+    const extraLen = view.getUint16(p + 30, true);
+    const commentLen = view.getUint16(p + 32, true);
+    const local = view.getUint32(p + 42, true);
+    const entry = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nameLen));
+    if (entry === "word/document.xml") {
+      const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+      const data = buf.subarray(start, start + size);
+      let xmlBytes = data;
+      if (method === 8) {
+        const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+        xmlBytes = new Uint8Array(await new Response(stream).arrayBuffer());
+      } else if (method !== 0) throw new Error("That Word file uses a format we can't read. Try a PDF.");
+      const xml = new DOMParser().parseFromString(new TextDecoder().decode(xmlBytes), "application/xml");
+      const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+      return [...xml.getElementsByTagNameNS(W, "p")].map((para) =>
+        [...para.getElementsByTagNameNS(W, "*")].map((node) => (node.localName === "t" ? node.textContent : node.localName === "tab" ? "\t" : "")).join("")).join("\n");
+    }
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  throw new Error("We couldn't find the text in that Word file. Try a PDF.");
 }
 
 start();

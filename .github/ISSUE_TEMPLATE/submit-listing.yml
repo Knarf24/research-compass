@@ -1,41 +1,57 @@
 name: Submit a research opportunity
-description: Tell us about a US undergraduate research program or lab opening. We check it before it goes live.
+description: Tell us about a US undergraduate research program or lab opening. It's checked before it goes live.
 title: "[Listing] "
 labels: ["listing"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for helping other students. Please only submit opportunities with a **public, official page** we can link to.
-        Don't include anyone's personal email or phone number; the official page is enough.
+        Thanks for helping other students. Only submit opportunities with a **public, official page** we can link to,
+        ideally on the university's or agency's own website (.edu or .gov).
+
+        **What happens next:** automatic checks run in a minute and post the results here (the link opens, the page names
+        the program, the deadline makes sense, it isn't already listed). Then a person opens the official page and confirms
+        it's real before it's published. Don't include anyone's personal email or phone number; the official page is enough.
   - type: input
     id: title
-    attributes: { label: Program or position name }
+    attributes: { label: "Program or position name" }
     validations: { required: true }
   - type: input
     id: org
-    attributes: { label: University, lab or organization }
+    attributes: { label: "University, lab or organization" }
     validations: { required: true }
   - type: input
     id: url
-    attributes: { label: Official page (link), placeholder: "https://" }
+    attributes: { label: "Official page (link)", placeholder: "https://" }
     validations: { required: true }
   - type: input
     id: location
-    attributes: { label: City and state, placeholder: "Durham, NC (or Remote)" }
+    attributes: { label: "City and state", placeholder: "Durham, NC (or Remote)" }
   - type: input
     id: deadline
-    attributes: { label: Application deadline, placeholder: "2027-02-15 (leave empty if rolling)" }
+    attributes: { label: "Application deadline", placeholder: "2027-02-15 (leave empty if rolling)" }
   - type: dropdown
     id: paid
-    attributes: { label: Is it paid?, options: ["Yes", "No", "Not sure"] }
+    attributes: { label: "Is it paid?", options: ["Yes", "No", "Not sure"] }
+  - type: dropdown
+    id: international
+    attributes: { label: "Can international students apply?", options: ["Yes", "No", "Not sure"] }
+  - type: dropdown
+    id: hbcu
+    attributes: { label: "Is it made for HBCU students?", options: ["No", "Yes"] }
   - type: textarea
     id: summary
-    attributes: { label: Short description in your own words (2-3 sentences) }
+    attributes: { label: "Short description in your own words (2-3 sentences)" }
     validations: { required: true }
   - type: input
     id: eligibility
-    attributes: { label: Who can apply?, placeholder: "e.g. sophomores and juniors, US citizens only" }
+    attributes: { label: "Who can apply?", placeholder: "e.g. sophomores and juniors, US citizens only" }
+  - type: dropdown
+    id: relation
+    attributes:
+      label: How do you know about it?
+      options: ["I run or coordinate it", "I'm a student or alum of it", "I found it online"]
+    validations: { required: true }
   - type: checkboxes
     id: confirm
     attributes:

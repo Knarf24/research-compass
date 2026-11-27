@@ -8,6 +8,7 @@ The page (main.js) only draws and saves. Everything here is plain standard-libra
   * email           draft a cold email (or follow-up / thank-you) from the profile and the target
   * tracker         deadlines, days left and reminders for the student's saved applications
   * ics             a calendar file with every deadline, for Google/Apple/Outlook calendars
+  * resume          suggest profile fields from the text of a résumé (on this device)
 
 The bridge is one function: call(name, json_args) -> json {"ok": result} or {"error": message}.
 """
@@ -507,8 +508,140 @@ def _ics_fold(line: str) -> str:
     return "\r\n".join(out)
 
 
+# ---------------------------------------------------------------- résumé reader
+# Reads the plain text of a résumé (taken out of the PDF or Word file in the browser) and
+# suggests profile fields. Nothing leaves the device here; main.js only fills empty fields
+# and the student checks everything before saving.
+MAJOR_WORDS: list[tuple[str, str]] = [
+    ("machine learning", "AI and machine learning"), ("artificial intelligence", "AI and machine learning"),
+    ("data science", "Computer science"), ("computer science", "Computer science"), ("computer engineering", "Electrical engineering"),
+    ("software", "Computer science"), ("information technology", "Computer science"), ("information systems", "Computer science"),
+    ("cybersecurity", "Computer science"), ("computing", "Computer science"), ("robotics", "Robotics"),
+    ("electrical", "Electrical engineering"), ("mechanical", "Mechanical and aerospace"), ("aerospace", "Mechanical and aerospace"),
+    ("civil", "Civil and environmental eng."), ("environmental engineering", "Civil and environmental eng."),
+    ("biomedical", "Biomedical and health"), ("nursing", "Biomedical and health"), ("public health", "Biomedical and health"),
+    ("kinesiology", "Biomedical and health"), ("pharm", "Biomedical and health"), ("health", "Biomedical and health"),
+    ("biochem", "Chemistry"), ("chemistry", "Chemistry"), ("chemical", "Chemistry"), ("materials", "Materials science"),
+    ("physics", "Physics and astronomy"), ("astronomy", "Physics and astronomy"), ("statistics", "Mathematics and statistics"),
+    ("mathematics", "Mathematics and statistics"), ("math", "Mathematics and statistics"), ("biology", "Biology"),
+    ("microbiology", "Biology"), ("neuroscience", "Biology"), ("ecology", "Ecology and environment"),
+    ("environmental science", "Ecology and environment"), ("geology", "Earth and ocean sciences"), ("geoscience", "Earth and ocean sciences"),
+    ("marine", "Earth and ocean sciences"), ("ocean", "Earth and ocean sciences"), ("agri", "Agriculture and food"),
+    ("food science", "Agriculture and food"), ("energy", "Energy"), ("psychology", "Psychology and social sciences"),
+    ("sociology", "Psychology and social sciences"), ("economics", "Psychology and social sciences"),
+    ("political science", "Psychology and social sciences"), ("education", "Education research"), ("engineering", "Mechanical and aerospace"),
+]
+_HEADERS = {
+    "skills": r"(technical |core |relevant |key )?skills( (and|&) (tools|technologies|interests))?|technologies|tools|technical proficienc(y|ies)|languages (and|&) tools",
+    "projects": r"(academic |personal |selected |relevant |technical )?projects?",
+    "interests": r"(research )?interests?|areas of interest",
+    "education": r"education|academic background",
+    "other": r"(work |professional |research |relevant |leadership )?experience|employment|work history|leadership|activities|"
+             r"involvement|honors|awards|certifications?|publications|volunteer(ing)?|summary|profile|objective|coursework|"
+             r"relevant coursework|references|contact",
+}
+_SCHOOL = re.compile(r"[^|•·,;\t]*\b(university|college|institute of technology|institute|polytechnic|community college)\b[^|•·,;\t]*", re.I)
+_GRAD = re.compile(r"(?:expected|anticipated|graduat\w*|class of|exp\.?)\D{0,20}((?:19|20)\d\d)|(?:may|june|december|dec|august|aug|spring|fall|summer|winter)\s+((?:20)\d\d)", re.I)
+_NOISE = re.compile(r"\S+@\S+|https?://\S+|www\.\S+|\+?\(?\d{3}\)?[\s.\-]\d{3}[\s.\-]\d{4}")
+
+
+def _header(line: str) -> str | None:
+    t = re.sub(r"[^a-z& ]", "", line.lower()).strip()
+    if not t or len(t) > 40:
+        return None
+    for name, pat in _HEADERS.items():
+        if re.fullmatch(pat, t):
+            return name
+    return None
+
+
+def _sections(lines: list[str]) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {"top": []}
+    cur = "top"
+    for ln in lines:
+        h = _header(ln)
+        if h:
+            cur = h
+            out.setdefault(cur, [])
+            continue
+        out.setdefault(cur, []).append(ln)
+    return out
+
+
+def _class_year(text: str, today: dt.date) -> str:
+    low = text.lower()
+    for word, year in (("sophomore", "Sophomore"), ("junior", "Junior"), ("senior", "Senior"), ("freshman", "Freshman"), ("first-year", "Freshman")):
+        if re.search(rf"\b{word}\b", low):
+            return year
+    if re.search(r"\b(associate of|associate's|a\.a\.|a\.s\.|community college)\b", low):
+        return "Community college"
+    if re.search(r"\b(m\.s\.|master of|ph\.?d|doctor of)\b", low) and not re.search(r"\b(b\.s\.|b\.a\.|bachelor)", low):
+        return "Graduate"
+    years = [int(a or b) for a, b in _GRAD.findall(text)]
+    years = [y for y in years if today.year - 1 <= y <= today.year + 6]
+    if not years:
+        return ""
+    left = max(years) - (today.year + 1 if today.month >= 7 else today.year)
+    return {0: "Senior", 1: "Junior", 2: "Sophomore"}.get(left, "Freshman" if left >= 3 else "")
+
+
+def _major(text: str, allowed: list[str]) -> str:
+    low = text.lower()
+    degree = re.search(r"(bachelor[^\n]{0,80}|\bb\.?\s?s\.?\b[^\n]{0,80}|\bb\.?\s?a\.?\b[^\n]{0,80}|major[^\n]{0,80}|associate[^\n]{0,80})", low)
+    for scope in ([degree.group(0)] if degree else []) + [low]:
+        for word, field in MAJOR_WORDS:
+            if word in scope and (not allowed or field in allowed):
+                return field
+    return ""
+
+
+def _clean_item(s: str) -> str:
+    return re.sub(r"^[\-–•·*●▪◦\s]+", "", s).strip(" .;")
+
+
+def resume(args: dict) -> dict:
+    text = _NOISE.sub(" ", str(args.get("text") or ""))[:30000]
+    allowed = list(args.get("fields") or [])
+    lines = [re.sub(r"\s+", " ", ln).strip() for ln in text.splitlines()]
+    lines = [ln for ln in lines if ln]
+    sec = _sections(lines)
+    out = {"name": "", "school": "", "year": "", "major": "", "skills": "", "interests": "", "project": ""}
+
+    for ln in sec.get("top", [])[:6] or lines[:3]:
+        words = ln.replace(",", " ").split()
+        if 2 <= len(words) <= 4 and not re.search(r"\d|@|résumé|resume|curriculum", ln, re.I) and all(w[:1].isupper() for w in words):
+            out["name"] = ln.title() if ln.isupper() else ln
+            break
+
+    edu = " \n".join(sec.get("education", [])) or "\n".join(lines[:25])
+    m = _SCHOOL.search(edu) or _SCHOOL.search(text)
+    if m:
+        out["school"] = re.sub(r"\s+", " ", m.group(0)).strip(" -–—()")[:120]
+    out["year"] = _class_year(edu, _today(args))
+    out["major"] = _major(edu, allowed)
+
+    skills: list[str] = []
+    for ln in sec.get("skills", []):
+        ln = re.sub(r"^[^:]{1,30}:\s*", "", _clean_item(ln))
+        for part in re.split(r"[,;|•·]| {2,}", ln):
+            part = part.strip(" .")
+            if 1 < len(part) <= 40 and part.lower() not in {s.lower() for s in skills}:
+                skills.append(part)
+    out["skills"] = ", ".join(skills[:20])
+
+    out["interests"] = ", ".join(_clean_item(x) for x in sec.get("interests", [])[:3])[:300]
+
+    proj = [_clean_item(x) for x in sec.get("projects", [])]
+    proj = [x for x in proj if x]
+    if proj:
+        title = re.sub(r"\s*[\(|–—-]?\s*((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\.?\s*)?(19|20)\d\d.*$", "", proj[0], flags=re.I).strip(" |–—-")
+        detail = next((x for x in proj[1:3] if re.match(r"(built|developed|designed|created|made|wrote|implemented|trained|analyzed)\b", x, re.I)), "")
+        out["project"] = (detail or title)[:200]
+    return out
+
+
 # ---------------------------------------------------------------- bridge
-FUNCS = {f.__name__: f for f in (load, programs, listing, professors, professor, email, tracker, ics)}
+FUNCS = {f.__name__: f for f in (load, programs, listing, professors, professor, email, tracker, ics, resume)}
 
 
 def call(name: str, args_json: str) -> str:

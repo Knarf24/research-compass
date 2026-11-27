@@ -1,5 +1,5 @@
 // Keeps the app working offline: files are served from the cache, then refreshed in the background.
-const CACHE = "research-compass-v3";
+const CACHE = "research-compass-v4";
 const CORE = ["./", "index.html", "style.css", "main.js", "config.js", "compass.py", "manifest.webmanifest", "icon.svg",
   "pyodide/pyodide.js", "pyodide/pyodide.asm.js", "pyodide/pyodide.asm.wasm", "pyodide/python_stdlib.zip", "pyodide/pyodide-lock.json"];
 

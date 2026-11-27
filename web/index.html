@@ -66,6 +66,14 @@
       <div class="list" id="pList"></div>
       <button class="ghost wide" id="pMore" hidden>Show more</button>
 
+      <div class="card block submit">
+        <div>
+          <h3>Know a research opportunity that isn't here?</h3>
+          <p class="small">Send it in with the official link. Automatic checks confirm the page opens, names the program and isn't already listed, then a person checks the official page before it's published. Needs a free GitHub account.</p>
+        </div>
+        <a class="primary btn" href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener">➕ Submit an opportunity</a>
+      </div>
+
       <details class="block dirs">
         <summary>More places to look</summary>
         <p class="small">Trusted directories we link to (we don't copy their listings). Each opens in a new tab.</p>
@@ -162,17 +170,22 @@
   <dialog id="profile" class="modal">
     <form method="dialog" id="profileForm">
       <h2>Your profile</h2>
-      <p class="small">Used to rank programs and fill in your emails. Stays on this device.</p>
+      <p class="small">Used to rank programs and fill in your emails. Stays on this device. Fields marked <span class="req">*</span> are required.</p>
+      <div class="resume">
+        <label class="ghost btn" id="pfResumeBtn">📄 Fill from my résumé <input type="file" id="pfResume" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden></label>
+        <p class="small" id="pfResumeStatus" role="status">PDF, Word (.docx) or text file. It fills in the empty fields below, and you can change anything before you save. Your résumé file isn't uploaded or kept.</p>
+        <label class="check" id="pfResumeAiWrap" hidden><input type="checkbox" id="pfResumeAi" checked> Use AI to read it (more accurate). Your email, phone number and links are removed first; the rest goes to Google Gemini's free service, which may use it to improve its products.</label>
+      </div>
       <div class="two">
-        <label>Name <input name="name" autocomplete="name"></label>
-        <label>College <input name="school" placeholder="e.g. your college or university"></label>
-        <label>Year <select name="year"></select></label>
-        <label>Major <select name="major"></select></label>
+        <label>Name <span class="req">*</span> <input name="name" autocomplete="name" required></label>
+        <label>College <span class="req">*</span> <input name="school" placeholder="e.g. your college or university" required></label>
+        <label>Year <span class="req">*</span> <select name="year" required></select></label>
+        <label>Major <span class="req">*</span> <select name="major" required></select></label>
       </div>
       <label>Other fields you'd consider <span class="small">(tap to pick)</span></label>
       <div class="pills" id="pfFields"></div>
-      <label>Research interests, in your words <input name="interests" placeholder="e.g. machine learning for health, robots, clean energy"></label>
-      <label>Skills <input name="skills" placeholder="e.g. Python, data analysis, lab safety training"></label>
+      <label>Research interests, in your words <span class="req">*</span> <input name="interests" required placeholder="e.g. machine learning for health, robots, clean energy"></label>
+      <label>Skills <span class="req">*</span> <input name="skills" required placeholder="e.g. Python, data analysis, lab safety training"></label>
       <label>One project or class you're proud of <input name="project" placeholder="e.g. Built a traffic forecasting app in Python"></label>
       <div class="two">
         <label>Are you a US citizen or permanent resident?

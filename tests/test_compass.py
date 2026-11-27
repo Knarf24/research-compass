@@ -18,6 +18,7 @@ os.environ["COMPASS_TODAY"] = "2026-11-27"
 
 import compass  # noqa: E402
 import fetch_data  # noqa: E402
+import submissions  # noqa: E402
 
 REU = [
     {"id": "2400001", "title": "REU Site: Machine Learning for Robotics and Autonomous Systems", "awardeeName": "NORTH CAROLINA STATE UNIVERSITY",
@@ -257,6 +258,110 @@ class Browser(unittest.TestCase):
         self.assertIn("DTSTART;VALUE=DATE:20261201", cal)
         self.assertIn("TRIGGER:-P7D", cal)
         self.assertTrue(all(len(l.encode()) <= 75 for l in cal.split("\r\n")))
+
+
+RESUME = """JORDAN A. SMITH
+Charlotte, NC | jordan@example.com | (704) 555-1234 | github.com/jsmith
+
+EDUCATION
+North Carolina A&T State University, Greensboro, NC
+Bachelor of Science in Computer Science, Expected May 2028
+
+PROJECTS
+TrafficFlow | Python, scikit-learn  (Aug 2026)
+- Built a traffic forecasting app that predicts congestion from sensor data
+
+EXPERIENCE
+IT Help Desk Assistant, Campus IT, 2025 - present
+
+TECHNICAL SKILLS
+Languages: Python, JavaScript, SQL
+Tools: Git, Pandas | Excel
+"""
+
+FORM = """### Program or position name
+
+Summer Robotics Research Program
+
+### University, lab or organization
+
+Example State University
+
+### Official page (link)
+
+https://robotics.example.edu/summer
+
+### City and state
+
+Raleigh, NC
+
+### Application deadline
+
+2027-02-15
+
+### Is it paid?
+
+Yes
+
+### Can international students apply?
+
+Not sure
+
+### Is it made for HBCU students?
+
+No
+
+### Short description in your own words (2-3 sentences)
+
+Ten weeks building field robots. Email me at prof@example.edu.
+
+### Who can apply?
+
+_No response_
+
+### How do you know about it?
+
+I found it online
+"""
+
+
+class ResumeAndSubmissionTests(unittest.TestCase):
+    def test_resume_fills_profile_fields(self):
+        out = compass.resume({"text": RESUME, "today": "2026-11-27", "fields": ["Computer science", "Biology"]})
+        self.assertEqual(out["name"], "Jordan A. Smith")
+        self.assertEqual(out["school"], "North Carolina A&T State University")
+        self.assertEqual(out["year"], "Junior")          # graduates May 2028
+        self.assertEqual(out["major"], "Computer science")
+        self.assertIn("Python", out["skills"])
+        self.assertIn("Excel", out["skills"])
+        self.assertTrue(out["project"].startswith("Built a traffic forecasting app"))
+        self.assertNotIn("@", json.dumps(out))
+
+    def test_resume_handles_empty_text(self):
+        out = compass.resume({"text": "", "today": "2026-11-27"})
+        self.assertEqual(set(out.values()), {""})
+
+    def test_submission_form_checks_and_listing(self):
+        form = submissions.parse_form(FORM)
+        self.assertEqual(form["title"], "Summer Robotics Research Program")
+        self.assertEqual(form["eligibility"], "")
+        page = "<html><h1>Summer Robotics Research Program</h1><p>Stipend: $6,000</p></html>"
+        fake = lambda url: (200, url, page.lower())  # noqa: E731
+        checks = submissions.run_checks(form, compass.dt.date(2026, 11, 27), fetch=fake)
+        icons = dict((m, i) for i, m in checks)
+        self.assertEqual(icons["The official page opens."], "✅")
+        self.assertEqual(icons["The page mentions the program by name."], "✅")
+        self.assertTrue(any("email address" in m for _, m in checks))
+        self.assertFalse(any(i == "❌" for i, _ in checks))
+        dead = submissions.run_checks({**form, "deadline": "2026-01-01"}, compass.dt.date(2026, 11, 27), fetch=lambda u: (404, u, ""))
+        self.assertEqual(sum(1 for i, _ in dead if i == "❌"), 2)
+        item = submissions.to_listing(form, 12, compass.dt.date(2026, 11, 27))
+        self.assertEqual(item["state"], "NC")
+        self.assertEqual(item["deadline"], "2027-02-15")
+        self.assertTrue(item["paid"])
+        self.assertEqual(item["international"], "check")
+        self.assertNotIn("@", item["summary"])
+        self.assertIn("Robotics", item["fields"])
 
 
 if __name__ == "__main__":

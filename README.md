@@ -25,6 +25,10 @@ cold email, and tracks every deadline. Free, no sign-up, and your data never lea
   real project, with a different structure each time, and can make it shorter, warmer, more formal or more
   confident. The API key stays in a small Vercel function (`ai-proxy/`). Without it, a built-in template writer
   is used.
+- **📄 Résumé fill:** upload a PDF, Word or text résumé while setting up your profile and it fills in the empty
+  fields (name, college, year, major, skills, interests, a project) for you to check and edit. The file is read in
+  your browser and never uploaded; if the AI writer is on and you allow it, the text (without email, phone and links)
+  is read by Gemini for better results.
 - **📋 Tracker:** save programs and professors, move them through stages (Interested → Emailed → Applied →
   Interview → Offer), get reminders ("emailed 9 days ago, send a follow-up"), and download every deadline to
   your calendar with a 7-day alert. Back up and restore as a file.
@@ -72,11 +76,18 @@ Directory `ai-proxy` and `GEMINI_API_KEY` set, then put its URL in `web/config.j
    (the key) and `USAJOBS_EMAIL` (the email you signed up with).
 3. Run the workflow from the **Actions** tab, or wait for Monday.
 
-## Approving a submitted listing
+## Community submissions, and how they're verified
 
-People submit through **Issues → New issue → Submit a research opportunity**. To publish one, check the official
-page, then add an entry to `data/submitted.json` with the same fields as `data/curated_programs.json`
-(`kind: "submitted"`), and close the issue. It goes live on the next run.
+Anyone can send an opportunity with **➕ Submit an opportunity** (a GitHub issue form, free account needed).
+
+1. **Automatic checks** (`scripts/submissions.py`, run by `.github/workflows/check-submission.yml`) comment on the issue
+   within a minute: the official link opens, it's on a .edu or .gov site (other sites are flagged), the page names the
+   program, a "paid" claim is backed by the page, the deadline is a real future date, it isn't already listed, and no
+   personal emails or phone numbers were pasted in. The submitter can edit the issue and the checks run again.
+2. **A person approves it.** The repository owner opens the official page, confirms it's real and current, then adds
+   the `approved` label. Only the owner's label counts.
+3. **Publishing is automatic:** the listing is added to `data/submitted.json` (emails and phone numbers removed, the
+   date checked recorded), the issue is closed, and the site rebuilds. Deadlines that pass drop off automatically.
 
 ## Run it yourself
 

@@ -159,6 +159,49 @@ ${custom ? `The student also asked: ${custom}` : ""}
 ${previous ? `\nRevise this earlier draft rather than starting over:\n${previous}` : ""}`.trim();
 }
 
+// ---- Résumé reading (mode "resume"): turns résumé text into profile fields.
+// The browser removes emails, phone numbers and links before sending.
+const RESUME_SYSTEM = `You read a US college student's résumé and fill in their Research Compass profile.
+Use only what the résumé says. Never guess or invent. Leave a field as an empty string when the résumé doesn't support it.
+- name: the student's full name.
+- school: the college or university they attend now (not high school).
+- year: one of the allowed class years, worked out from the expected graduation date and today's date, or "" if unclear.
+- major: the closest allowed field for their degree, or "".
+- skills: a comma-separated list of their most relevant technical and lab skills, at most 15, most important first.
+- interests: one short phrase of research interests in their own words if stated; otherwise infer a modest phrase from their projects and coursework (at most 12 words).
+- project: one sentence (at most 25 words) describing the project or experience they would most likely mention to a professor, starting with a verb like "Built".
+Return JSON only.`;
+
+function resumeRequest(input) {
+  const list = (v) => (Array.isArray(v) ? v.slice(0, 40).map((x) => clip(String(x), 60)).filter(Boolean) : []);
+  const years = list(input.years);
+  const fields = list(input.fields);
+  const str = { type: "STRING" };
+  const schema = {
+    type: "OBJECT",
+    properties: {
+      name: str, school: str,
+      year: { type: "STRING", description: "Exactly one of the allowed class years, or an empty string." },
+      major: { type: "STRING", description: "Exactly one of the allowed fields, or an empty string." },
+      skills: str, interests: str, project: str,
+    },
+    required: ["name", "school", "year", "major", "skills", "interests", "project"],
+  };
+  const text = String(input.text || "").slice(0, 12000);
+  const today = clip(input.today, 10) || new Date().toISOString().slice(0, 10);
+  const prompt = `Today's date: ${today}\nAllowed class years: ${years.join(" | ")}\nAllowed fields: ${fields.join(" | ")}\n\nRÉSUMÉ:\n${text}`;
+  return { system: RESUME_SYSTEM, prompt, schema, temperature: 0.2 };
+}
+
+function cleanResume(out, input) {
+  const keys = ["name", "school", "year", "major", "skills", "interests", "project"];
+  const clean = Object.fromEntries(keys.map((k) => [k, String(out[k] || "").trim().slice(0, k === "skills" ? 400 : 250)]));
+  // Only keep a class year or field the page actually offers.
+  if (Array.isArray(input.years) && !input.years.includes(clean.year)) clean.year = "";
+  if (Array.isArray(input.fields) && !input.fields.includes(clean.major)) clean.major = "";
+  return clean;
+}
+
 export default async function handler(req, res) {
   const allowed = cors(req, res);
   if (req.method === "OPTIONS") return res.status(allowed ? 204 : 403).end();
@@ -176,17 +219,22 @@ export default async function handler(req, res) {
 
   // Thinking makes Gemini much slower; keep it low. Older models reject thinkingLevel,
   // so on a 400 that mentions thinking we retry once without it.
+  const isResume = input.mode === "resume";
+  const job = isResume
+    ? resumeRequest(input)
+    : { system: SYSTEM, prompt: buildPrompt(input), schema: SCHEMA, temperature: 0.9 };
+
   const callGemini = (thinking, model = MODEL, ms = 20000) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM }] },
-      contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
+      systemInstruction: { parts: [{ text: job.system }] },
+      contents: [{ role: "user", parts: [{ text: job.prompt }] }],
       generationConfig: {
-        temperature: 0.9,
+        temperature: job.temperature,
         maxOutputTokens: 4000,
         responseMimeType: "application/json",
-        responseSchema: SCHEMA,
+        responseSchema: job.schema,
         ...(thinking ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
       },
     }),
@@ -242,9 +290,10 @@ export default async function handler(req, res) {
       ? cand.content.parts.filter((p) => typeof p.text === "string" && !p.thought).map((p) => p.text).join("")
       : "";
     if (!text) {
-      return res.status(422).json({ error: "The AI couldn't write this one. Try rewording your 'why' line." });
+      return res.status(422).json({ error: isResume ? "The AI couldn't read this résumé." : "The AI couldn't write this one. Try rewording your 'why' line." });
     }
     const out = JSON.parse(text);
+    if (isResume) return res.status(200).json(cleanResume(out, input));
     return res.status(200).json({
       subject: String(out.subject || "").slice(0, 200),
       body: String(out.body || "").slice(0, 4000),
@@ -256,4 +305,4 @@ export default async function handler(req, res) {
   }
 }
 
-export { buildPrompt }; // for tests
+export { buildPrompt, resumeRequest }; // for tests
