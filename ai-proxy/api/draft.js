@@ -1,25 +1,27 @@
 // Research Compass AI email writer: a small Vercel serverless function.
 //
 // The public site (GitHub Pages) cannot hide an API key, so the key lives here as the
-// ANTHROPIC_API_KEY environment variable in Vercel. The site sends the student's profile,
-// the program or professor, and what kind of email they want; this function asks Claude
-// for a short, specific draft and returns {subject, body, notes}.
+// GEMINI_API_KEY environment variable in Vercel. The site sends the student's profile,
+// the program or professor, and what kind of email they want; this function asks Google
+// Gemini (free tier) for a short, specific draft and returns {subject, body, notes}.
 //
-// Guard rails (cost and abuse):
+// Cost: the key comes from Google AI Studio's free tier, with no billing turned on, so
+// there is nothing to pay. When the free quota is used up Google simply refuses requests
+// until it resets, and the site falls back to the built-in template writer.
+// Note: on the free tier Google may use what is sent to improve its products, so the
+// site tells students not to type anything private.
+//
+// Guard rails (abuse and staying inside the free quota):
 //   * Only the Research Compass site may call it (CORS allow-list, ALLOWED_ORIGINS).
-//   * Inputs are trimmed to fixed sizes, so one request can't run up a big bill.
-//   * A per-visitor limit (PER_IP_PER_HOUR) and a per-instance daily cap (DAILY_LIMIT).
-//     These are best effort; the hard cap is the monthly spend limit you set in the
-//     Anthropic Console, which no request can exceed.
-import Anthropic from "@anthropic-ai/sdk";
+//   * Inputs are trimmed to fixed sizes.
+//   * A per-visitor limit (PER_IP_PER_HOUR) and a daily cap (DAILY_LIMIT, per instance).
 
-const MODEL = "claude-opus-5-5";
+const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://knarf24.github.io")
   .split(",").map((s) => s.trim()).filter(Boolean);
 const PER_IP_PER_HOUR = Number(process.env.PER_IP_PER_HOUR || 15);
-const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 400);
+const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 200);
 
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY
 const hits = new Map(); // ip -> [timestamps]
 let day = "", today = 0;
 
@@ -57,15 +59,16 @@ Write like a thoughtful student, not like a template:
 - If the student is an international student and the program is for US citizens or permanent residents only, don't hide it: the email should ask whether there is a way for an international student to take part.
 Return JSON only.`;
 
+// Gemini's response schema format (an OpenAPI subset).
 const SCHEMA = {
-  type: "object",
+  type: "OBJECT",
   properties: {
-    subject: { type: "string" },
-    body: { type: "string" },
-    notes: { type: "array", items: { type: "string" }, description: "Up to 3 short tips for the student about this email (what to check or add before sending)." },
+    subject: { type: "STRING" },
+    body: { type: "STRING" },
+    notes: { type: "ARRAY", items: { type: "STRING" }, description: "Up to 3 short tips for the student about this email (what to check or add before sending)." },
   },
   required: ["subject", "body", "notes"],
-  additionalProperties: false,
+  propertyOrdering: ["subject", "body", "notes"],
 };
 
 const clip = (v, n) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, n) : "");
@@ -159,7 +162,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(allowed ? 204 : 403).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Use POST." });
   if (!allowed) return res.status(403).json({ error: "This endpoint only serves Research Compass." });
-  if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ error: "The AI writer isn't set up yet." });
+  if (!process.env.GEMINI_API_KEY) return res.status(503).json({ error: "The AI writer isn't set up yet." });
 
   const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
   const stop = limited(ip);
@@ -169,20 +172,49 @@ export default async function handler(req, res) {
   if (typeof input === "string") { try { input = JSON.parse(input); } catch { input = null; } }
   if (!input || typeof input !== "object") return res.status(400).json({ error: "Bad request." });
 
+  let r;
   try {
-    const response = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 4000,
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
-      system: SYSTEM,
-      messages: [{ role: "user", content: buildPrompt(input) }],
+    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM }] },
+        contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: 4000,
+          responseMimeType: "application/json",
+          responseSchema: SCHEMA,
+        },
+      }),
+      signal: AbortSignal.timeout(25000),
     });
-    if (response.stop_reason === "refusal") {
+  } catch (error) {
+    console.error("Gemini request failed:", error && error.name);
+    return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
+  }
+
+  if (r.status === 429) {
+    return res.status(429).json({ error: "The free AI writer is busy or out of today's quota. Try again later, or use the template writer." });
+  }
+  if (r.status === 400 || r.status === 401 || r.status === 403) {
+    console.error(`Gemini rejected the request (${r.status}): ${(await r.text()).slice(0, 300)}`);
+    return res.status(503).json({ error: "The AI writer isn't available right now." });
+  }
+  if (!r.ok) {
+    console.error(`Gemini error ${r.status}`);
+    return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
+  }
+
+  try {
+    const data = await r.json();
+    const cand = (data.candidates || [])[0];
+    const text = cand && cand.content && Array.isArray(cand.content.parts)
+      ? cand.content.parts.filter((p) => typeof p.text === "string" && !p.thought).map((p) => p.text).join("")
+      : "";
+    if (!text) {
       return res.status(422).json({ error: "The AI couldn't write this one. Try rewording your 'why' line." });
     }
-    const text = response.content.filter((b) => b.type === "text").map((b) => b.text).join("");
     const out = JSON.parse(text);
     return res.status(200).json({
       subject: String(out.subject || "").slice(0, 200),
@@ -190,19 +222,8 @@ export default async function handler(req, res) {
       notes: Array.isArray(out.notes) ? out.notes.slice(0, 3).map((n) => String(n).slice(0, 300)) : [],
     });
   } catch (error) {
-    if (error instanceof Anthropic.RateLimitError) {
-      return res.status(429).json({ error: "The AI is busy right now. Please try again in a minute." });
-    }
-    if (error instanceof Anthropic.AuthenticationError) {
-      console.error("Anthropic key rejected");
-      return res.status(503).json({ error: "The AI writer isn't available right now." });
-    }
-    if (error instanceof Anthropic.APIError) {
-      console.error(`Anthropic API error ${error.status}: ${error.message}`);
-      return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
-    }
-    console.error(error);
-    return res.status(500).json({ error: "Something went wrong drafting the email." });
+    console.error("Could not read Gemini's reply:", error && error.message);
+    return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
   }
 }
 

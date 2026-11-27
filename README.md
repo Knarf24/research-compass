@@ -21,7 +21,7 @@ cold email, and tracks every deadline. Free, no sign-up, and your data never lea
   Department of Education HBCU list) are badged, can be filtered, and rank first when you say you attend an HBCU.
 - **🌍 International students:** every listing says whether international students can apply (yes, no, or check).
   Programs open to them rank first; US-citizens-only programs are clearly flagged.
-- **✉️ AI email writer:** Claude writes a short, specific email from your profile and the program or professor's
+- **✉️ AI email writer:** Google Gemini (free tier) writes a short, specific email from your profile and the program or professor's
   real project, with a different structure each time, and can make it shorter, warmer, more formal or more
   confident. The API key stays in a small Vercel function (`ai-proxy/`). Without it, a built-in template writer
   is used.
@@ -62,8 +62,8 @@ new data in `web/data/`, and republishes the site. Nothing has to be done by han
 
 ## Turning on the AI email writer
 
-See `ai-proxy/README.md`: an Anthropic API key with a monthly spend limit, a Vercel project with Root Directory
-`ai-proxy`, then put its URL in `web/config.js` as `aiEndpoint`.
+See `ai-proxy/README.md`: a free Gemini API key from Google AI Studio (no billing), a Vercel project with Root
+Directory `ai-proxy` and `GEMINI_API_KEY` set, then put its URL in `web/config.js` as `aiEndpoint`.
 
 ## Turning on USAJOBS (optional)
 

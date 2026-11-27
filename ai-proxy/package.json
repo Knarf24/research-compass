@@ -2,9 +2,6 @@
   "name": "research-compass-ai",
   "private": true,
   "type": "module",
-  "description": "Tiny serverless function that drafts Research Compass emails with Claude. The API key stays here, never in the public site.",
-  "dependencies": {
-    "@anthropic-ai/sdk": "^1.14.0"
-  },
+  "description": "Tiny serverless function that drafts Research Compass emails with Google Gemini's free tier. The API key stays here, never in the public site.",
   "engines": { "node": ">=20" }
 }

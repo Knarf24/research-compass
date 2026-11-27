@@ -1,24 +1,28 @@
 # Research Compass AI email writer
 
-A tiny Vercel serverless function (`api/draft.js`) that writes Research Compass emails with Claude.
-The public site can't hide an API key, so the key lives here as a Vercel environment variable.
+A tiny Vercel serverless function (`api/draft.js`) that writes Research Compass emails with
+**Google Gemini's free tier**. The public site can't hide an API key, so the key lives here as a
+Vercel environment variable. There is nothing to pay: no billing is turned on.
 
 ## One-time setup (about 10 minutes)
 
-1. **Anthropic API key:** sign in at https://console.anthropic.com, add a payment method, and create an API key.
-2. **Spend limit (the hard safety cap):** in the Console's limits settings, set a monthly spend limit
-   (for example $10). Requests stop when it's reached, so the bill can never run away.
-3. **Vercel:** in Vercel choose **Add New → Project**, import `Knarf24/research-compass`, set
-   **Root Directory** to `ai-proxy`, and add the environment variable `ANTHROPIC_API_KEY` = your key. Deploy.
-4. Send the project URL (like `https://research-compass-ai.vercel.app`) so `web/config.js` can point at
+1. **Free Gemini key:** sign in at https://aistudio.google.com with a Google account, click
+   **Get API key → Create API key**. Do **not** set up billing, so it stays free.
+2. **Vercel:** in Vercel choose **Add New → Project**, import `Knarf24/research-compass`, set
+   **Root Directory** to `ai-proxy`, and add the environment variable `GEMINI_API_KEY` = your key. Deploy.
+3. Send the project URL (like `https://research-compass-ai.vercel.app`) so `web/config.js` can point at
    `<url>/api/draft`.
+
+## How the free tier behaves
+
+- Google gives a daily free quota. When it's used up, Google refuses requests until it resets (no charge),
+  and the site falls back to its built-in template writer.
+- On the free tier Google may use what's sent to improve its products. The email tab tells students
+  not to type anything private.
 
 ## Guard rails
 
 - Only `https://knarf24.github.io` may call it (`ALLOWED_ORIGINS` to change).
 - Inputs are trimmed to fixed sizes.
-- `PER_IP_PER_HOUR` (default 15) and `DAILY_LIMIT` (default 400) are best-effort limits per server
-  instance; the Console spend limit is the real cap.
-- Nothing is stored. Each request is a single Claude call (model `claude-opus-5-5`, low effort, JSON output).
-
-Rough cost: a draft uses about 1,500 tokens, so roughly 1 to 2 cents per email at current prices.
+- `PER_IP_PER_HOUR` (default 15) and `DAILY_LIMIT` (default 200) are best-effort limits per server instance.
+- Nothing is stored. Each request is one Gemini call (model `gemini-flash-latest`, change with `GEMINI_MODEL`), JSON output.
