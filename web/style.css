@@ -265,3 +265,39 @@ details.howscore summary { font-size: 14px; color: var(--teal); }
 .tabs { background: var(--bg); box-shadow: 0 8px 12px -10px rgba(0, 0, 0, .6); }
 .grant .summary { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .tabs { max-width: none; padding-left: max(16px, calc((100% - 1048px) / 2)); padding-right: max(16px, calc((100% - 1048px) / 2)); }
+
+/* First visit: a small invitation instead of a full-screen pop-up */
+.nudge { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 12px; border-color: var(--gold); }
+.nudge > div:first-child { flex: 1 1 260px; }
+.nudge p { margin: 2px 0 0; }
+.nudge .row { margin-top: 0; }
+.chip-short { display: none; }
+.chip { flex: none; }
+.brand { min-width: 0; flex: 1 1 auto; }
+.brand h1 { overflow: hidden; text-overflow: ellipsis; }
+/* Profile form: fields picker folded into one line */
+details.pick { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: var(--bg2); }
+details.pick summary { font-weight: 400; font-size: 14px; color: var(--muted); }
+details.pick[open] summary { margin-bottom: 6px; }
+details.pick .pills { max-height: 220px; overflow-y: auto; }
+@media (max-width: 760px) {
+  .chip-long { display: none; }
+  .chip-short { display: inline; }
+  .chip { max-width: 46%; }
+  .brand h1 { font-size: 1.1rem; }
+  .modal { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); border-radius: 16px; }
+  .modal form { padding: 14px; }
+  .modal h2 { font-size: 1.1rem; }
+  .modal label { margin-top: 8px; font-size: 13px; }
+  .modal .two { grid-template-columns: 1fr 1fr; gap: 0 8px; }
+  .modal .two label > input, .modal .two label > select { font-size: 15px; padding: 8px 9px; }
+  .resume { padding: 10px; margin-top: 8px; }
+  .privacy { font-size: 12px; }
+  .nudge .row { width: 100%; }
+  .nudge .row .primary { flex: 1; justify-content: center; }
+}
+@media (max-width: 340px) { .modal .two { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  #pfResumeAiWrap { font-size: 12.5px; }
+  .modal > form > .small:first-of-type { margin: 2px 0 0; }
+}

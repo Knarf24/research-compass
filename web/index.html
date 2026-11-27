@@ -45,6 +45,16 @@
         <h2>Paid research programs</h2>
         <p class="small">Summer programs, REU sites and student jobs that are open now. Each one shows its deadline, pay and who can apply, and how well it fits your profile.</p>
       </div>
+      <div class="card nudge" id="setupNudge" hidden>
+        <div>
+          <b>See how well each program fits you</b>
+          <p class="small">Add your major and year (about a minute) to get a match % on every program. You can browse without it.</p>
+        </div>
+        <div class="row">
+          <button class="primary" type="button" id="nudgeGo">Set up my profile</button>
+          <button class="ghost" type="button" id="nudgeHide" aria-label="Hide this">Not now</button>
+        </div>
+      </div>
       <div class="stats" id="stats"></div>
       <div class="card finder">
         <label class="field search">Search
@@ -210,29 +220,31 @@
   <dialog id="profile" class="modal">
     <form method="dialog" id="profileForm">
       <h2>Your profile</h2>
-      <p class="small">Used to rank programs and fill in your emails. Stays on this device. Fields marked <span class="req">*</span> are required.</p>
+      <p class="small">Used to rank programs and fill in your emails. Stays on this device. <span class="req">*</span> = required.</p>
       <div class="resume">
         <label class="ghost btn" id="pfResumeBtn">📄 Fill from my résumé <input type="file" id="pfResume" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" hidden></label>
-        <p class="small" id="pfResumeStatus" role="status">PDF, Word (.docx) or text file. It fills in the empty fields below, and you can change anything before you save. Your résumé file isn't uploaded or kept.</p>
-        <label class="check" id="pfResumeAiWrap" hidden><input type="checkbox" id="pfResumeAi" checked> Use AI to read it (more accurate). Your email, phone number and links are removed first; the rest goes to Google Gemini's free service, which may use it to improve its products.</label>
+        <p class="small" id="pfResumeStatus" role="status">PDF, Word or text. Fills in the empty fields below; you can change anything. The file isn't uploaded or kept.</p>
+        <label class="check" id="pfResumeAiWrap" hidden><input type="checkbox" id="pfResumeAi" checked> Use AI to read it (more accurate). Your email, phone and links are removed first; the rest goes to Google Gemini's free service, which may use it to improve its products.</label>
       </div>
       <div class="two">
         <label>Name <span class="req">*</span> <input name="name" autocomplete="name" required></label>
-        <label>College <span class="req">*</span> <input name="school" placeholder="e.g. your college or university" required></label>
+        <label>College <span class="req">*</span> <input name="school" placeholder="Your college" required></label>
         <label>Year <span class="req">*</span> <select name="year" required></select></label>
         <label>Major <span class="req">*</span> <select name="major" required></select></label>
       </div>
-      <label>Other fields you'd consider <span class="small">(tap to pick)</span></label>
-      <div class="pills" id="pfFields"></div>
-      <label>Research interests, in your words <span class="req">*</span> <input name="interests" required placeholder="e.g. machine learning for health, robots, clean energy"></label>
+      <details class="pick" id="pfFieldsBox">
+        <summary>Other fields you'd consider <span class="small" id="pfFieldsCount"></span></summary>
+        <div class="pills" id="pfFields"></div>
+      </details>
+      <label>Research interests, in your words <span class="req">*</span> <input name="interests" required placeholder="e.g. robots, clean energy"></label>
       <label>Skills <span class="req">*</span> <input name="skills" required placeholder="e.g. Python, data analysis, lab safety training"></label>
       <label>One project or class you're proud of <input name="project" placeholder="e.g. Built a traffic forecasting app in Python"></label>
       <div class="two">
-        <label>Are you a US citizen or permanent resident?
-          <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No, I'm an international student</option></select>
+        <label>US citizen or permanent resident?
+          <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No (international)</option></select>
         </label>
-        <label>Preferred states <span class="small">(optional, e.g. NC, VA)</span> <input name="states" placeholder="NC, VA, SC"></label>
-        <label>GPA <span class="small">(optional, out of 4.0; used to check GPA minimums)</span> <input name="gpa" type="number" min="0" max="4" step="0.01" inputmode="decimal" placeholder="e.g. 3.4"></label>
+        <label>Preferred states <span class="small">(optional)</span> <input name="states" placeholder="e.g. NC, VA"></label>
+        <label>GPA <span class="small">(optional, out of 4.0)</span> <input name="gpa" type="number" min="0" max="4" step="0.01" inputmode="decimal" placeholder="e.g. 3.4"></label>
       </div>
       <label class="check"><input type="checkbox" name="hbcu"> I attend an HBCU (show HBCU programs first)</label>
       <label class="check"><input type="checkbox" name="paid_only"> I'm only looking for paid opportunities</label>

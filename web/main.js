@@ -138,6 +138,8 @@ function setup() {
 
   // profile
   $("meBtn").addEventListener("click", openProfile);
+  $("nudgeGo").addEventListener("click", openProfile);
+  $("nudgeHide").addEventListener("click", () => { store.set("nudgeHidden", true); showNudge(); });
   setupProfileForm();
   setupItemForm();
 
@@ -149,7 +151,8 @@ function setup() {
   const sharedId = location.hash.startsWith("#p=") ? decodeURIComponent(location.hash.slice(3)) : "";
   showTab(sharedId ? "programs" : location.hash.slice(1) || "programs");
   if (sharedId) showShared(sharedId);
-  if (!profile.major) setTimeout(openProfile, 400);
+  // No pop-up on arrival: people can browse first. A small card on Programs invites them to set up a profile.
+  showNudge();
 }
 
 function stat(n, label) { return el("div", { class: "stat" }, el("b", {}, Number(n || 0).toLocaleString()), el("span", {}, label)); }
@@ -164,11 +167,16 @@ function showTab(name) {
   if (window.scrollY > top) window.scrollTo(0, top);
 }
 
+function showNudge() {
+  $("setupNudge").hidden = !!profile.major || store.get("nudgeHidden", false);
+}
+
 function showMe() {
+  showNudge();
   const first = (profile.name || "").trim().split(/\s+/)[0] || "Your profile";
   $("meLabel").replaceChildren(...(profile.major
     ? [el("b", {}, first), el("span", { class: "chip-major" }, " · " + profile.major), el("span", { class: "chip-edit" }, "Edit")]
-    : ["Set up your profile"]));
+    : [el("span", { class: "chip-long" }, "Set up your profile"), el("span", { class: "chip-short" }, "Profile")]));
 }
 
 // ------------------------------------------------------------------ sharing
@@ -181,7 +189,19 @@ function shareUrl(r) {
   const base = (window.COMPASS_CONFIG && window.COMPASS_CONFIG.shareBase) || location.href.split("#")[0];
   return new URL(`p/${shareSlug(r.id)}/`, base.endsWith("/") ? base : base + "/").href;
 }
-function toggleShare(btn, r) {
+// One tap: the phone's own share sheet (WhatsApp, Messages, LinkedIn…). Where there isn't one
+// (most computers), the link is copied; the small menu is only a last resort if copying is blocked.
+async function toggleShare(btn, r) {
+  const url = shareUrl(r);
+  const text = `${r.title} (${r.org}): paid research opportunity on Research Compass`;
+  if (navigator.share) {
+    try { await navigator.share({ title: r.title, text, url }); return; }
+    catch (err) { if (err && err.name === "AbortError") return; }
+  }
+  try { await navigator.clipboard.writeText(url); toast("Link copied. Paste it anywhere to share."); return; }
+  catch { shareMenu(btn, r); }
+}
+function shareMenu(btn, r) {
   const open = btn.parentElement.nextElementSibling;
   if (open && open.classList.contains("sharemenu")) { open.remove(); return; }
   const url = shareUrl(r);
@@ -594,10 +614,16 @@ function openProfile() {
   f.paid_only.checked = !!profile.paid_only;
   f.hbcu.checked = !!profile.hbcu;
   const chosen = new Set(profile.fields || []);
+  const countFields = () => {
+    const n = $("pfFields").querySelectorAll("button[aria-pressed=true]").length;
+    $("pfFieldsCount").textContent = n ? `(${n} picked)` : "(optional)";
+  };
   $("pfFields").replaceChildren(...INFO.fields.map((v) => el("button", {
     type: "button", class: "pill toggle", "data-v": v, "aria-pressed": String(chosen.has(v)),
-    onclick: (e) => e.currentTarget.setAttribute("aria-pressed", String(e.currentTarget.getAttribute("aria-pressed") !== "true")),
+    onclick: (e) => { e.currentTarget.setAttribute("aria-pressed", String(e.currentTarget.getAttribute("aria-pressed") !== "true")); countFields(); },
   }, v)));
+  countFields();
+  $("pfFieldsBox").open = false;
   for (const node of f.querySelectorAll(".filled")) node.classList.remove("filled");
   $("profile").returnValue = "";
   $("profile").showModal();
