@@ -1,0 +1,22 @@
+name: Check link submissions
+# Manual check: sends one real program link through the site's "paste a link" endpoint.
+# It opens a "[Listing] …" issue; close it afterwards (don't approve it).
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Link to send
+        default: https://www.nist.gov/surf
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send a link
+        env:
+          LINK: ${{ inputs.url }}
+        run: |
+          python3 -c 'import json,os; print(json.dumps({"url": os.environ["LINK"], "note": "Test from the Check link submissions workflow", "website": ""}))' > body.json
+          curl -sS -m 90 -X POST https://research-compass-ai-proxy.vercel.app/api/submit \
+            -H "Origin: https://knarf24.github.io" -H "Content-Type: application/json" \
+            --data @body.json -w "\nHTTP %{http_code}\n" | tee out.txt
+          grep -q "HTTP 200" out.txt
