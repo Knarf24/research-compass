@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Research Compass</title>
+  <meta name="description" content="Find paid undergraduate research in the US, matched to you: NSF REU sites, national lab and agency programs, federal student jobs, and professors with active NSF grants. Draft the cold email and track every deadline. Python running in your browser; refreshed weekly from public data.">
+  <meta name="theme-color" content="#0b1426">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <img src="icon.svg" alt="" class="logo" width="44" height="44">
+      <div>
+        <h1>Research Compass</h1>
+        <p class="tag">Paid undergrad research across the US, matched to you.</p>
+      </div>
+    </div>
+    <button class="chip" id="meBtn" type="button" title="Your profile">👤 <span id="meLabel">Set up your profile</span></button>
+  </header>
+
+  <div id="loading" class="loading" role="status">
+    <div class="spinner"></div>
+    <div>
+      <b id="loadText">Starting Python…</b>
+      <div class="small">The matching, professor finder and email writer are Python running right here in your browser. The first visit downloads about 13 MB; after that it opens instantly.</div>
+    </div>
+  </div>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" data-tab="programs" aria-selected="true">🧭 Programs</button>
+    <button role="tab" data-tab="profs">🔬 Professors</button>
+    <button role="tab" data-tab="email">✉️ Email writer</button>
+    <button role="tab" data-tab="tracker">📋 Tracker <span class="badge" id="dueBadge" hidden></span></button>
+  </nav>
+
+  <main id="app" class="app" hidden>
+    <!-- PROGRAMS -->
+    <section id="t-programs" class="panel">
+      <div class="stats" id="stats"></div>
+      <div class="filters">
+        <input id="pq" type="search" placeholder="Search programs, schools or topics…" aria-label="Search programs">
+        <select id="pField" aria-label="Field"><option value="">All fields</option></select>
+        <select id="pState" aria-label="State"><option value="">All states</option></select>
+        <select id="pKind" aria-label="Type">
+          <option value="">All types</option>
+          <option value="reu">NSF REU summer sites</option>
+          <option value="program">National programs</option>
+          <option value="federal">Federal student jobs</option>
+          <option value="submitted">Community submitted</option>
+        </select>
+        <select id="pSort" aria-label="Sort">
+          <option value="match">Best match</option>
+          <option value="deadline">Soonest deadline</option>
+          <option value="name">A to Z</option>
+        </select>
+        <label class="check"><input type="checkbox" id="pEligible"> Only ones I qualify for</label>
+      </div>
+      <p class="small" id="pCount"></p>
+      <div class="list" id="pList"></div>
+      <button class="ghost wide" id="pMore" hidden>Show more</button>
+
+      <details class="block dirs">
+        <summary>More places to look</summary>
+        <p class="small">Trusted directories we link to (we don't copy their listings). Each opens in a new tab.</p>
+        <div id="dirs" class="dirlist"></div>
+      </details>
+    </section>
+
+    <!-- PROFESSORS -->
+    <section id="t-profs" class="panel" hidden>
+      <div class="intro">
+        <h2>Find a professor to work with</h2>
+        <p class="small">Researchers at US universities with an <b>active NSF grant</b>, so they have funded work going on now. Matched on the words in their grant summaries. We never collect emails: use “Find their faculty page” to reach them through their university.</p>
+      </div>
+      <div class="filters">
+        <input id="rq" type="search" placeholder="What do you want to work on? e.g. “drones for farming”, “cancer imaging”" aria-label="Research interest">
+        <select id="rField" aria-label="Field"><option value="">All fields</option></select>
+        <select id="rState" aria-label="State"><option value="">All states</option></select>
+        <input id="rSchool" type="search" placeholder="University (optional)" aria-label="University">
+      </div>
+      <p class="small" id="rCount"></p>
+      <div class="list" id="rList"></div>
+    </section>
+
+    <!-- EMAIL -->
+    <section id="t-email" class="panel" hidden>
+      <div class="emailgrid">
+        <div class="card">
+          <h2>Write a cold email</h2>
+          <p class="small" id="eTarget">Pick a program or professor with “✉️ Draft email”, or write a general one.</p>
+          <label>Type of email
+            <select id="eKind">
+              <option value="intro">First email: ask to join / ask about the program</option>
+              <option value="question">Question about a program</option>
+              <option value="follow_up">Follow-up (no reply after a week)</option>
+              <option value="thank_you">Thank-you after a meeting</option>
+            </select>
+          </label>
+          <label>Why this one? (one sentence, in your words)
+            <textarea id="eWhy" rows="2" placeholder="e.g. I want to use machine learning to help doctors spot disease earlier."></textarea>
+          </label>
+          <label>When can you start?
+            <input id="eWhen" value="this summer">
+          </label>
+          <p class="small">Your name, school, year, major, skills and a project come from <a href="#" id="eProfileLink">your profile</a>.</p>
+        </div>
+        <div class="card draft">
+          <label>Subject <input id="eSubject"></label>
+          <label>Email <textarea id="eBody" rows="16"></textarea></label>
+          <div class="row">
+            <button class="primary" id="eCopy">Copy email</button>
+            <a class="ghost btn" id="eMail" href="#">Open in my email app</a>
+            <span class="small" id="eWords"></span>
+          </div>
+          <ul class="tips" id="eTips"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRACKER -->
+    <section id="t-tracker" class="panel" hidden>
+      <div class="block-head">
+        <h2>Your applications</h2>
+        <div class="row">
+          <button class="ghost" id="tAdd">+ Add your own</button>
+          <button class="ghost" id="tIcs">📅 Add deadlines to my calendar</button>
+          <button class="ghost" id="tExport">Back up</button>
+          <label class="ghost btn">Restore <input type="file" id="tImport" accept="application/json" hidden></label>
+        </div>
+      </div>
+      <div class="stages" id="tStages"></div>
+      <div class="list" id="tList"></div>
+      <p class="small">Saved only in this browser. Use “Back up” to keep a copy or move to another device. Reminders show here when you open the site; the calendar file adds an alert 7 days before each deadline.</p>
+    </section>
+  </main>
+
+  <!-- PROFILE -->
+  <dialog id="profile" class="modal">
+    <form method="dialog" id="profileForm">
+      <h2>Your profile</h2>
+      <p class="small">Used to rank programs and fill in your emails. Stays on this device.</p>
+      <div class="two">
+        <label>Name <input name="name" autocomplete="name"></label>
+        <label>College <input name="school" placeholder="e.g. your college or university"></label>
+        <label>Year <select name="year"></select></label>
+        <label>Major <select name="major"></select></label>
+      </div>
+      <label>Other fields you'd consider <span class="small">(tap to pick)</span></label>
+      <div class="pills" id="pfFields"></div>
+      <label>Research interests, in your words <input name="interests" placeholder="e.g. machine learning for health, robots, clean energy"></label>
+      <label>Skills <input name="skills" placeholder="e.g. Python, data analysis, lab safety training"></label>
+      <label>One project or class you're proud of <input name="project" placeholder="e.g. Built a traffic forecasting app in Python"></label>
+      <div class="two">
+        <label>US citizen or permanent resident?
+          <select name="citizen"><option value="">Prefer not to say</option><option value="yes">Yes</option><option value="no">No</option></select>
+        </label>
+        <label>Preferred states <span class="small">(optional, e.g. NC, VA)</span> <input name="states" placeholder="NC, VA, SC"></label>
+      </div>
+      <label class="check"><input type="checkbox" name="paid_only"> I'm only looking for paid opportunities</label>
+      <div class="row end">
+        <button class="ghost" value="cancel" formnovalidate>Close</button>
+        <button class="primary" value="save" id="pfSave">Save profile</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ADD / EDIT TRACKER ITEM -->
+  <dialog id="itemDlg" class="modal">
+    <form method="dialog" id="itemForm">
+      <h2 id="itemTitle">Track an application</h2>
+      <label>Name <input name="title" required></label>
+      <label>Organization or professor <input name="org"></label>
+      <label>Link <input name="url" type="url" placeholder="https://"></label>
+      <div class="two">
+        <label>Deadline <input name="deadline" type="date"></label>
+        <label>Stage <select name="stage"></select></label>
+        <label>Date you emailed <input name="emailed_on" type="date"></label>
+        <label>Remind me on <input name="follow_up" type="date"></label>
+      </div>
+      <label>Notes <textarea name="note" rows="2"></textarea></label>
+      <div class="row end">
+        <button class="ghost danger" value="delete" id="itemDelete">Remove</button>
+        <button class="ghost" value="cancel" formnovalidate>Cancel</button>
+        <button class="primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <footer class="foot small">
+    <p>Data: <a href="https://www.nsf.gov/funding/initiatives/reu" target="_blank" rel="noopener">NSF</a> award data, <a href="https://www.usajobs.gov/" target="_blank" rel="noopener">USAJOBS</a>, and programs we check by hand. <span id="updated"></span> Always confirm details on the official page before applying.</p>
+    <p>Research Compass is an independent student project. It is not affiliated with or endorsed by NSF, any agency, university or company listed. Names are used only to point you to official pages.
+      Know a program we're missing? <a href="https://github.com/Knarf24/research-compass/issues/new?template=submit-listing.yml" target="_blank" rel="noopener">Submit a listing</a>.</p>
+    <p>Built by Frank Ncube · <a href="https://github.com/Knarf24/research-compass" target="_blank" rel="noopener">Source</a> · <a href="https://knarf24.github.io/project-hub/" target="_blank" rel="noopener">More projects</a></p>
+  </footer>
+
+  <script src="pyodide/pyodide.js"></script>
+  <script src="main.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  </script>
+</body>
+</html>

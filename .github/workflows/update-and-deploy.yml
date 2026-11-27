@@ -1,0 +1,59 @@
+name: Update listings and deploy
+
+# Runs every Monday (and on every push): pulls fresh public data, drops expired listings,
+# saves the new data in the repo, then publishes the site to GitHub Pages.
+on:
+  schedule:
+    - cron: "17 10 * * 1"   # Mondays 10:17 UTC (5:17 AM Eastern)
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run the tests
+        run: python tests/test_compass.py
+      - name: Pull this week's opportunities (NSF, USAJOBS, hand-checked, submitted)
+        env:
+          USAJOBS_API_KEY: ${{ secrets.USAJOBS_API_KEY }}
+          USAJOBS_EMAIL: ${{ secrets.USAJOBS_EMAIL }}
+        run: python scripts/fetch_data.py
+      - name: Save the new data in the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add web/data
+          if git diff --cached --quiet; then echo "No data changes."; else git commit -m "Weekly data refresh $(date -u +%Y-%m-%d)" && git push; fi
+      - name: Put the site together
+        run: sh build_site.sh
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,8 @@
+[
+  {"name": "NSF REU site directory", "url": "https://www.nsf.gov/funding/initiatives/reu", "what": "NSF's official list of every REU site, with each site's own application page."},
+  {"name": "NSF ETAP", "url": "https://etap.nsf.gov/", "what": "NSF's application portal that many REU sites use."},
+  {"name": "Pathways to Science", "url": "https://www.pathwaystoscience.org/", "what": "A directory of 1,000+ funded STEM internships, fellowships and scholarships."},
+  {"name": "Zintellect (ORISE)", "url": "https://zintellect.com/", "what": "Government-funded research internships and fellowships run through ORISE."},
+  {"name": "NIH training", "url": "https://www.training.nih.gov/", "what": "NIH's training office: summer internships and other programs at NIH."},
+  {"name": "USAJOBS student jobs", "url": "https://www.usajobs.gov/search/results/?hp=student", "what": "Federal jobs open to current students."}
+]
