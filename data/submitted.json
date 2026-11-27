@@ -99,5 +99,24 @@
     "checked": "2026-11-27",
     "international": "yes",
     "hbcu_focus": false
+  },
+  {
+    "id": "sub-9",
+    "kind": "submitted",
+    "title": "DSI Summer Lab 2027",
+    "org": "University of Chicago Data Science Institute",
+    "city": "Chicago",
+    "state": "IL",
+    "fields": [],
+    "summary": "Interdisciplinary, project-based summer research program in data science for undergraduates and Chicago-area high school students. Undergrads must be enrolled in college in fall 2027 and know at least one programming language.",
+    "url": "https://datascience.uchicago.edu/education/internships/application/",
+    "deadline": "2027-01-11",
+    "ends": null,
+    "paid": null,
+    "citizenship": "Undergrads enrolled in fall 2027 (not graduating seniors) with some programming experience",
+    "years": [],
+    "checked": "2026-11-27",
+    "international": "yes",
+    "hbcu_focus": false
   }
 ]
