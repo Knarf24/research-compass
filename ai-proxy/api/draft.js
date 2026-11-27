@@ -172,38 +172,51 @@ export default async function handler(req, res) {
   if (typeof input === "string") { try { input = JSON.parse(input); } catch { input = null; } }
   if (!input || typeof input !== "object") return res.status(400).json({ error: "Bad request." });
 
+  // Thinking makes Gemini much slower; keep it low. Older models reject thinkingLevel,
+  // so on a 400 that mentions thinking we retry once without it.
+  const callGemini = (thinking) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
+      generationConfig: {
+        temperature: 0.9,
+        maxOutputTokens: 4000,
+        responseMimeType: "application/json",
+        responseSchema: SCHEMA,
+        ...(thinking ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
+      },
+    }),
+    signal: AbortSignal.timeout(50000),
+  });
+
   let r;
   try {
-    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: 4000,
-          responseMimeType: "application/json",
-          responseSchema: SCHEMA,
-        },
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
+    r = await callGemini(true);
+    if (r.status === 400) {
+      const text = await r.text();
+      if (/thinking/i.test(text)) r = await callGemini(false);
+      else r = new Response(text, { status: 400 });
+    }
   } catch (error) {
+    const timedOut = error && (error.name === "TimeoutError" || error.name === "AbortError");
     console.error("Gemini request failed:", error && error.name);
-    return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
+    return res.status(504).json({ error: "The AI took too long. Please try again.", detail: timedOut ? "timeout" : "network" });
   }
 
   if (r.status === 429) {
     return res.status(429).json({ error: "The free AI writer is busy or out of today's quota. Try again later, or use the template writer." });
   }
   if (r.status === 400 || r.status === 401 || r.status === 403) {
-    console.error(`Gemini rejected the request (${r.status}): ${(await r.text()).slice(0, 300)}`);
-    return res.status(503).json({ error: "The AI writer isn't available right now." });
+    const why = (await r.text()).slice(0, 300);
+    console.error(`Gemini rejected the request (${r.status}): ${why}`);
+    const m = why.match(/"message":\s*"([^"]{0,160})/);
+    return res.status(503).json({ error: "The AI writer isn't available right now.", detail: `gemini ${r.status}${m ? ": " + m[1] : ""}` });
   }
   if (!r.ok) {
     console.error(`Gemini error ${r.status}`);
-    return res.status(502).json({ error: "The AI writer had a problem. Please try again." });
+    return res.status(502).json({ error: "The AI writer had a problem. Please try again.", detail: `gemini ${r.status}` });
   }
 
   try {

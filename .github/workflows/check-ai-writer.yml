@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Request a sample draft
         run: |
-          curl -sS -m 60 -X POST https://research-compass-ai-proxy.vercel.app/api/draft \
+          curl -sS -m 90 -X POST https://research-compass-ai-proxy.vercel.app/api/draft \
             -H "Origin: https://knarf24.github.io" -H "Content-Type: application/json" \
             -d '{"profile":{"name":"Sample Student","school":"a North Carolina college","year":"Sophomore","major":"Computer science","interests":"machine learning for health","skills":"Python","project":"Built a traffic forecasting app in Python"},"target":{"type":"program","title":"Summer Undergraduate Research Fellowship","org":"NIST","summary":"Paid summer research at NIST labs in measurement science."},"kind":"intro","why":"I want to use data to solve real problems."}' \
             -w "\nHTTP %{http_code}\n" | tee out.txt
