@@ -25,4 +25,4 @@ Vercel environment variable. There is nothing to pay: no billing is turned on.
 - Only `https://knarf24.github.io` may call it (`ALLOWED_ORIGINS` to change).
 - Inputs are trimmed to fixed sizes.
 - `PER_IP_PER_HOUR` (default 15) and `DAILY_LIMIT` (default 200) are best-effort limits per server instance.
-- Nothing is stored. Each request is one Gemini call (model `gemini-flash-latest`, change with `GEMINI_MODEL`), JSON output.
+- Nothing is stored. Each request is one Gemini call (model `gemini-flash-latest`, or `gemini-flash-lite-latest` when that is busy; change with `GEMINI_MODEL` and `GEMINI_BACKUP_MODEL`), JSON output.

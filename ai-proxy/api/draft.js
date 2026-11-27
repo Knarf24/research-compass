@@ -17,6 +17,8 @@
 //   * A per-visitor limit (PER_IP_PER_HOUR) and a daily cap (DAILY_LIMIT, per instance).
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+// Used when the main model is overloaded (503) or out of free quota (429).
+const BACKUP_MODEL = process.env.GEMINI_BACKUP_MODEL || "gemini-flash-lite-latest";
 const ALLOWED = (process.env.ALLOWED_ORIGINS || "https://knarf24.github.io")
   .split(",").map((s) => s.trim()).filter(Boolean);
 const PER_IP_PER_HOUR = Number(process.env.PER_IP_PER_HOUR || 15);
@@ -174,7 +176,7 @@ export default async function handler(req, res) {
 
   // Thinking makes Gemini much slower; keep it low. Older models reject thinkingLevel,
   // so on a 400 that mentions thinking we retry once without it.
-  const callGemini = (thinking) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+  const callGemini = (thinking, model = MODEL) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
     body: JSON.stringify({
@@ -188,16 +190,23 @@ export default async function handler(req, res) {
         ...(thinking ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
       },
     }),
-    signal: AbortSignal.timeout(50000),
+    signal: AbortSignal.timeout(25000),
   });
 
   let r;
   try {
-    r = await callGemini(true);
-    if (r.status === 400) {
-      const text = await r.text();
-      if (/thinking/i.test(text)) r = await callGemini(false);
-      else r = new Response(text, { status: 400 });
+    const attempt = async (model) => {
+      let resp = await callGemini(true, model);
+      if (resp.status === 400) {
+        const text = await resp.text();
+        resp = /thinking/i.test(text) ? await callGemini(false, model) : new Response(text, { status: 400 });
+      }
+      return resp;
+    };
+    r = await attempt(MODEL);
+    if ([429, 500, 503].includes(r.status) && BACKUP_MODEL && BACKUP_MODEL !== MODEL) {
+      console.error(`Gemini ${MODEL} returned ${r.status}; trying ${BACKUP_MODEL}`);
+      r = await attempt(BACKUP_MODEL);
     }
   } catch (error) {
     const timedOut = error && (error.name === "TimeoutError" || error.name === "AbortError");
@@ -216,7 +225,7 @@ export default async function handler(req, res) {
   }
   if (!r.ok) {
     console.error(`Gemini error ${r.status}`);
-    return res.status(502).json({ error: "The AI writer had a problem. Please try again.", detail: `gemini ${r.status}` });
+    return res.status(502).json({ error: r.status === 503 ? "The free AI is overloaded right now. Please try again in a minute." : "The AI writer had a problem. Please try again.", detail: `gemini ${r.status}` });
   }
 
   try {
