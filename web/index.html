@@ -22,11 +22,11 @@
     <button class="chip" id="meBtn" type="button" title="Edit your profile"><span aria-hidden="true">👤</span> <span id="meLabel">Set up your profile</span></button>
   </header>
 
-  <div id="loading" class="loading" role="status">
+  <div id="loading" class="loading slim" role="status">
     <div class="spinner"></div>
     <div>
-      <b id="loadText">Starting Python…</b>
-      <div class="small">The matching, professor finder and email writer are Python running right here in your browser. The first visit downloads about 13 MB; after that it opens instantly.</div>
+      <b id="loadText">Starting Python in the background…</b>
+      <div class="small">The matching, professor finder and email writer are Python running right here in your browser. The first visit downloads Python once (about 13 MB); after that it is saved on this device.</div>
     </div>
   </div>
 
@@ -291,9 +291,7 @@
 
   <script src="config.js"></script>
   <script src="pyodide/pyodide.js"></script>
+  <script src="pyfast.js"></script>
   <script src="main.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-  </script>
 </body>
 </html>

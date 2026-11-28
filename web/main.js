@@ -28,12 +28,22 @@ function call(name, args = {}) {
   return out.ok;
 }
 
+// The page shows right away; Python and this week's data load in the background, and the lists fill
+// in as soon as they are ready (about half a second on a repeat visit).
 async function start() {
+  $("app").hidden = false;
+  previewTab(location.hash.startsWith("#p=") ? "programs" : location.hash.slice(1) || "programs");
+  for (const b of $("tabs").querySelectorAll("button")) {
+    b.onclick = () => { if (!INFO) { previewTab(b.dataset.tab); history.replaceState(null, "", "#" + b.dataset.tab); } };
+  }
+  document.documentElement.dataset.ui = "ready";
   try {
-    py = await loadPyodide({ indexURL: new URL("pyodide/", location.href).href });
-    $("loadText").textContent = "Loading this week's opportunities…";
     const get = (u) => fetch(u, { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(u + " missing"); return r.text(); });
-    const [code, listings, professors] = await Promise.all([get("compass.py"), get("data/listings.json"), get("data/professors.json")]);
+    const [pyodide, code, listings, professors] = await Promise.all([
+      loadPyodideFast(), get("compass.py"), get("data/listings.json"), get("data/professors.json"),
+    ]);
+    py = pyodide;
+    $("loadText").textContent = "Loading this week's opportunities…";
     py.FS.writeFile("/home/pyodide/compass.py", code);
     py.runPython("from compass import call");
     INFO = call("load", { listings, professors });
@@ -43,8 +53,17 @@ async function start() {
     return;
   }
   $("loading").hidden = true;
-  $("app").hidden = false;
   setup();
+  document.documentElement.dataset.py = "ready";
+  // Keeps Python saved on this device so the next visit starts without downloading it (see sw.js).
+  if ("serviceWorker" in navigator && isSecureContext) navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Switches the visible section before Python is ready (the lists fill in once it is).
+function previewTab(name) {
+  if (!$("t-" + name)) name = "programs";
+  for (const b of $("tabs").querySelectorAll("button")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
+  for (const s of document.querySelectorAll(".panel")) s.hidden = s.id !== "t-" + name;
 }
 
 // ------------------------------------------------------------------ helpers
