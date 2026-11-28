@@ -35,3 +35,23 @@ jobs:
             -w "\nHTTP %{http_code}\n" | tee out.txt
           grep -i "access-control-allow-origin" headers.txt
           grep -q "HTTP 200" out.txt
+      - name: Visitor counter (Vercel Web Analytics)
+        env:
+          SITE: ${{ inputs.site }}
+        run: |
+          curl -sS "${SITE}" | grep -o '_vercel/insights/script.js' | head -1
+          curl -sS -o /dev/null -w "counter script %{http_code}\n" "${SITE}_vercel/insights/script.js"
+          npm i --no-save --silent playwright@1.49.1 >/dev/null && npx --yes playwright@1.49.1 install --with-deps chromium >/dev/null 2>&1
+          cat > visit.mjs <<'JS'
+          import { chromium } from "playwright";
+          const b = await chromium.launch();
+          const p = await b.newPage();
+          const sent = [];
+          p.on("response", (r) => { if (r.url().includes("/_vercel/insights/")) sent.push(`${r.request().method()} ${new URL(r.url()).pathname} ${r.status()}`); });
+          await p.goto(process.env.SITE, { waitUntil: "networkidle" });
+          await p.waitForTimeout(3000);
+          console.log(sent.join("\n") || "no counter requests");
+          await b.close();
+          if (!sent.some((s) => s.startsWith("POST") && s.endsWith(" 200"))) process.exit(1);
+          JS
+          node visit.mjs
