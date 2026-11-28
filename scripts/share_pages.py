@@ -82,6 +82,7 @@ def page(r: dict, updated: str) -> str:
 <link rel="canonical" href="{url}">
 <link rel="icon" href="../../icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../../style.css">
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <header class="top">
@@ -120,7 +121,9 @@ def page(r: dict, updated: str) -> str:
 
 NOT_FOUND = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Not found · Research Compass</title><link rel="stylesheet" href="SITE_URLstyle.css"></head>
+<title>Not found · Research Compass</title><link rel="stylesheet" href="SITE_URLstyle.css">
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
 <body><main class="app shared"><article class="card" style="margin-top:40px">
 <h2>This opportunity isn't listed anymore</h2>
 <p class="small">Its deadline may have passed, or the page moved. There are hundreds more on Research Compass.</p>

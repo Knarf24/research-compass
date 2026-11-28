@@ -72,6 +72,7 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET" || req.headers.has("range")) return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;
+  if (url.pathname.startsWith("/_vercel/")) return; // visit counter: always straight to the network, never saved
   const key = sharedKey(url);
   e.respondWith(key ? fromShared(req, key) : networkFirst(req));
 });
